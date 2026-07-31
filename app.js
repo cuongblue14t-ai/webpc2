@@ -165,9 +165,11 @@ async function initDb() {
 
 initDb();
 
-// Always start the server (with fallback if port is busy)
+// Always start the server (listening on 0.0.0.0 for Cloud platforms like Render)
+const HOST = '0.0.0.0';
+
 function startServer(portToUse) {
-  const server = app.listen(portToUse, () => console.log(`🚀 Server listening on http://localhost:${portToUse}`))
+  const server = app.listen(portToUse, HOST, () => console.log(`🚀 Server listening on http://${HOST}:${portToUse}`))
     .on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
         console.log(`⚠️ Port ${portToUse} in use, trying port ${portToUse + 1}...`);
