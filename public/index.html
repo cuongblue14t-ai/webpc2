@@ -192,7 +192,9 @@
         cats.forEach(cat => {
           const card = document.createElement('div');
           card.className = 'category-card';
-          const imgHTML = cat.hinh_anh ? `<div class="cat-img-wrap"><img src="${cat.hinh_anh}" alt="${cat.ten_danh_muc}"></div>` : '';
+          const imgHTML = cat.hinh_anh 
+            ? `<div class="cat-img-wrap"><img src="${cat.hinh_anh}" alt="${cat.ten_danh_muc}" onerror="this.onerror=null; this.src='placeholder.png';"></div>` 
+            : `<div class="cat-img-wrap"><img src="placeholder.png" alt="${cat.ten_danh_muc}"></div>`;
           const countBadge = cat.so_luong_san_pham !== undefined ? `<span style="font-size:0.75rem; color:#f97316; font-weight:700; margin-left:4px; background:#fff7ed; padding:2px 6px; border-radius:10px; border:1px solid #ffedd5;">${cat.so_luong_san_pham} SP</span>` : '';
           card.innerHTML = `<a href="categories.html?cat=${cat.id}">${imgHTML}<span class="cat-title">${cat.ten_danh_muc} ${countBadge}</span></a>`;
           grid.appendChild(card);

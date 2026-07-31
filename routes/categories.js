@@ -18,12 +18,20 @@ router.post('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-// READ all categories (with product counts)
+// READ all categories (with product counts and fallback representative product image)
 router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT dm.*, 
-             COUNT(sp.id) AS so_luong_san_pham
+      SELECT dm.id, dm.ten_danh_muc, dm.mo_ta, dm.trang_thai,
+             COUNT(sp.id) AS so_luong_san_pham,
+             COALESCE(
+               NULLIF(dm.hinh_anh, ''),
+               (SELECT asp.duong_dan 
+                FROM anh_san_pham asp 
+                JOIN san_pham sp_sub ON asp.id_san_pham = sp_sub.id 
+                WHERE sp_sub.id_danh_muc = dm.id AND sp_sub.is_deleted = 0 AND asp.duong_dan IS NOT NULL AND asp.duong_dan != ''
+                ORDER BY asp.anh_chinh DESC, asp.id ASC LIMIT 1)
+             ) AS hinh_anh
       FROM danh_muc dm
       LEFT JOIN san_pham sp ON sp.id_danh_muc = dm.id AND sp.is_deleted = 0
       GROUP BY dm.id
