@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chi Tiết Sản Phẩm</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ══════════════════════════════════════
+       Product Detail – Two Column Layout
+    ══════════════════════════════════════ */
+    .detail-container {
+      max-width: 1280px;
+      margin: auto;
+      padding: 2rem;
+    }
+
+    /* Product name */
+    .product-name {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    /* ── Two-column layout ── */
+    .detail-layout {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+    .detail-left {
+      flex: 0 0 45%;
+      max-width: 45%;
+      min-width: 0;
+      position: sticky;
+      top: 1rem;
+    }
+    .detail-right {
+      flex: 0 0 calc(55% - 2rem);
+      max-width: calc(55% - 2rem);
+      min-width: 0;
+    }
+
+    /* ══════════════════════════════════════
+       Gallery: Ảnh chính + Ảnh phụ
+    ══════════════════════════════════════ */
+    .product-gallery {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .gallery-main-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.2rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .gallery-main-wrap img {
+      max-width: 100%;
+      max-height: 450px;
+      height: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      transition: opacity 0.4s ease;
+    }
+    .gallery-main-wrap img.fading {
+      opacity: 0;
+    }
+
+    /* ── Thumbnails ── */
+    .gallery-thumbs {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 6px 2px 10px;
+      width: 100%;
+      justify-content: center;
+      scrollbar-width: thin;
+      scrollbar-color: var(--orange) #f0f0f0;
+    }
+    .gallery-thumbs::-webkit-scrollbar { height: 5px; }
+    .gallery-thumbs::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 4px; }
+    .gallery-thumbs::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 4px; }
+
+    .gallery-thumb {
+      flex-shrink: 0;
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      background: #f9f9f9;
+      padding: 4px;
+    }
+    .gallery-thumb:hover {
+      transform: scale(1.08);
+      border-color: #ddd;
+    }
+    .gallery-thumb.active {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.2);
+      transform: scale(1.08);
+    }
+
+    /* ══════════════════════════════════════
+       Right Column: Specs + Purchase Block
+    ══════════════════════════════════════ */
+
+    /* ── Specs Table ── */
+    .spec-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .spec-card-header {
+      background: var(--dark);
+      color: #fff;
+      padding: 0.9rem 1.2rem;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .spec-table tr {
+      border-bottom: 1px solid #f0f0f0;
+      transition: background 0.2s;
+    }
+    .spec-table tr:last-child {
+      border-bottom: none;
+    }
+    .spec-table tr:hover {
+      background: #fef7f0;
+    }
+    .spec-table th {
+      text-align: left;
+      padding: 0.7rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b7280;
+      background: #fafafa;
+      width: 38%;
+      vertical-align: top;
+    }
+    .spec-table td {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.85rem;
+      color: var(--dark);
+      font-weight: 500;
+    }
+
+    /* ── Purchase Block ── */
+    .purchase-block {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 1.5rem;
+    }
+
+    /* Price display */
+    .price-display {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .price-current {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #dc2626;
+      line-height: 1.2;
+    }
+    .price-original {
+      font-size: 1rem;
+      color: #9ca3af;
+      text-decoration: line-through;
+      font-weight: 500;
+    }
+
+    /* Stock status */
+    .stock-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+    }
+    .stock-status.in-stock {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+    }
+    .stock-status.out-of-stock {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+    .stock-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .stock-status.in-stock .stock-dot {
+      background: #059669;
+      animation: pulse-green 2s infinite;
+    }
+    .stock-status.out-of-stock .stock-dot {
+      background: #dc2626;
+    }
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Action Buttons ── */
+    .purchase-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-detail-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: transform 0.2s, box-shadow 0.25s, filter 0.2s;
+      width: 100%;
+    }
+    .btn-detail-action:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+    .btn-detail-action:active {
+      transform: translateY(0);
+    }
+    .btn-detail-action .btn-icon {
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    /* Liên hệ nhận báo giá – Cam */
+    .btn-contact-quote {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      box-shadow: 0 4px 14px rgba(249,115,22,0.3);
+    }
+    .btn-contact-quote:hover {
+      box-shadow: 0 6px 20px rgba(249,115,22,0.45);
+    }
+
+    /* Thêm vào giỏ hàng – Xanh dương */
+    .btn-add-cart {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 4px 14px rgba(59,130,246,0.3);
+    }
+    .btn-add-cart:hover {
+      box-shadow: 0 6px 20px rgba(59,130,246,0.45);
+    }
+
+    /* Mua ngay – Đỏ, nổi bật nhất */
+    .btn-buy-now {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+      box-shadow: 0 4px 14px rgba(220,38,38,0.35);
+      font-size: 1.05rem;
+      padding: 16px 20px;
+    }
+    .btn-buy-now:hover {
+      box-shadow: 0 8px 24px rgba(220,38,38,0.5);
+    }
+
+    /* ── Description ── */
+    .product-description-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .product-description-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    .product-description-card p {
+      font-size: 0.9rem;
+      color: #4b5563;
+      line-height: 1.7;
+    }
+
+    /* ══════════════════════════════════════
+       Responsive
+    ══════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .detail-layout {
+        flex-direction: column;
+      }
+      .detail-left,
+      .detail-right {
+        flex: none;
+        max-width: 100%;
+        width: 100%;
+        position: static;
+      }
+      .detail-left {
+        margin-bottom: 1.5rem;
+      }
+      .gallery-main-wrap img {
+        max-height: 350px;
+      }
+      .purchase-actions .btn-detail-action {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .detail-container {
+        padding: 1rem;
+      }
+      .product-name {
+        font-size: 1.25rem;
+      }
+      .gallery-main-wrap {
+        padding: 0.8rem;
+      }
+      .gallery-main-wrap img {
+        max-height: 260px;
+      }
+      .gallery-thumb {
+        width: 60px;
+        height: 60px;
+      }
+      .price-current {
+        font-size: 1.5rem;
+      }
+      .spec-table th,
+      .spec-table td {
+        padding: 0.55rem 0.8rem;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header (reuse) -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="Nam Nguyễn PC & Workstation Logo" class="logo-img">
+        <div class="company-brand-text">
+          <span class="company-title">NAM NGUYỄN</span>
+          <span class="company-sub">PC & WORKSTATION</span>
+        </div>
+      </a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="categories.html">Danh mục</a></li>
+        <li><a href="products.html">Sản phẩm</a></li>
+        <li><a href="promotions.html" class="promo-link-highlight">🔥 Khuyến Mãi</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+        <li><a href="cart.html" class="cart-link">🛒 Giỏ hàng (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+    <div class="search-wrap">
+      <input type="text" placeholder="Tìm kiếm sản phẩm..." id="search-input" />
+      <button id="search-btn">🔍</button>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  </header>
+
+  <main class="site-main">
+    <section class="detail-container" id="detail-container">
+      <!-- Content will be injected by script -->
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 NAM NGUYỄN PC & WORKSTATION. All rights reserved.</p>
+  </footer>
+
+  <script src="cart.js"></script>
+  <script src="zalo-qr-modal.js"></script>
+  <script src="auth-modal.js"></script>
+  <script>
+    // Utility to get query param
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    const productId = getQueryParam('id');
+    const apiUrl = `/api/products/${productId}`;
+    const detailEl = document.getElementById('detail-container');
+
+    async function loadProduct() {
+      if (!productId) {
+        detailEl.innerHTML = '<p>Không tìm thấy ID sản phẩm.</p>';
+        return;
+      }
+      try {
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error('Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.');
+        const p = await res.json();
+
+        // ── Build gallery HTML ──
+        const allImages = (p.images && p.images.length > 0) ? p.images : ['placeholder.png'];
+
+        const thumbsHtml = allImages.map((src, i) =>
+          `<img class="gallery-thumb${i === 0 ? ' active' : ''}" src="${src}" alt="${p.ten_san_pham} - ảnh ${i+1}" data-idx="${i}" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='placeholder.png';">`
+        ).join('');
+
+        const galleryHtml = `
+          <div class="product-gallery">
+            <div class="gallery-main-wrap">
+              <img src="${allImages[0]}" alt="${p.ten_san_pham}" id="gallery-main-img" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='placeholder.png';">
+            </div>
+            <div class="gallery-thumbs" id="gallery-thumbs">
+              ${thumbsHtml}
+            </div>
+          </div>
+        `;
+
+        // ── Build specs rows ──
+        let specsRows = '';
+        if (p.thong_so && typeof p.thong_so === 'object' && Object.keys(p.thong_so).length > 0) {
+          for (let [key, value] of Object.entries(p.thong_so)) {
+            let displayKey = key ? key.toString().trim() : '';
+            let displayVal = value ? value.toString().trim() : '';
+
+            if (displayKey.includes('\t')) {
+              const parts = displayKey.split('\t').map(p => p.trim()).filter(Boolean);
+              displayKey = parts[0];
+              if (parts.length > 1 && (displayVal === 'Có' || !displayVal)) {
+                displayVal = parts.slice(1).join(' ');
+              }
+            }
+
+            if (displayVal === 'Có') {
+              specsRows += `<tr><th colspan="2" style="background:#f8fafc; color:#1e293b; font-weight:700; font-size:0.88rem; padding:0.65rem 1rem; border-top:1px solid #e2e8f0;">${displayKey}</th></tr>`;
+            } else {
+              specsRows += `<tr><th>${displayKey}</th><td>${displayVal}</td></tr>`;
+            }
+          }
+        } else {
+          specsRows = '<tr><td colspan="2" style="text-align:center; color:#6b7280; padding:1.2rem;">Chưa cập nhật thông số kỹ thuật chi tiết.</td></tr>';
+        }
+
+        // ── Price values ──
+        const price = p.gia ? Number(p.gia) : 0;
+        const salePrice = p.gia_khuyen_mai ? Number(p.gia_khuyen_mai) : 0;
+        const displayPrice = salePrice && salePrice < price ? salePrice : price;
+        const hasDiscount = salePrice && salePrice < price;
+        const stock = p.so_luong !== undefined ? Number(p.so_luong) : (p.trang_thai ? 1 : 0);
+        const isInStock = stock > 0;
+
+        // Format description with line breaks
+        const formattedDesc = p.mo_ta ? p.mo_ta.replace(/\n/g, '<br>') : 'Chưa có bài viết mô tả chi tiết cho sản phẩm này.';
+
+        // ── Build full HTML ──
+        detailEl.innerHTML = `
+          <h2 class="product-name">${p.ten_san_pham}</h2>
+
+          <div class="detail-layout">
+            <!-- ═══ LEFT: Gallery ═══ -->
+            <div class="detail-left">
+              ${galleryHtml}
+            </div>
+
+            <!-- ═══ RIGHT: Specs + Purchase ═══ -->
+            <div class="detail-right">
+              <!-- Purchase Block -->
+              <div class="purchase-block" style="margin-bottom:1.5rem;">
+                <!-- Price -->
+                <div class="price-display">
+                  <span class="price-current">${displayPrice.toLocaleString('vi-VN')}đ</span>
+                  ${hasDiscount ? `<span class="price-original">${price.toLocaleString('vi-VN')}đ</span>` : ''}
+                </div>
+
+                <!-- Stock Status -->
+                <div style="margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 0.9rem; font-weight: 600; color: #4b5563;">Tình trạng:</span>
+                  <div class="stock-status ${isInStock ? 'in-stock' : 'out-of-stock'}" style="margin-bottom: 0;">
+                    <span class="stock-dot"></span>
+                    ${isInStock ? 'Còn hàng' : 'Hết hàng'}
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="purchase-actions">
+                  <button class="btn-detail-action btn-contact-quote" onclick="showZaloQR()">
+                    <span class="btn-icon">📞</span>
+                    Liên hệ nhận báo giá
+                  </button>
+                  <button class="btn-detail-action btn-add-cart" id="btn-add-cart">
+                    <span class="btn-icon">🛒</span>
+                    Thêm vào giỏ hàng
+                  </button>
+                  <button class="btn-detail-action btn-buy-now" id="btn-buy-now">
+                    <span class="btn-icon">⚡</span>
+                    Mua ngay
+                  </button>
+                </div>
+              </div>
+
+              <!-- Technical Specifications Table Section -->
+              <div class="spec-card">
+                <div class="spec-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span>📋 Bảng Thông số kỹ thuật chi tiết</span>
+                  <small style="font-weight:normal; opacity:0.8; font-size:0.8rem;">Nam Nguyễn PC</small>
+                </div>
+                <table class="spec-table">
+                  ${specsRows}
+                </table>
+              </div>
+
+              <!-- Detailed Description Section -->
+              <div class="product-description-card" style="margin-top:1.5rem;">
+                <h3 style="display:flex; align-items:center; gap:8px;">
+                  <span>📖 Bài viết Mô tả sản phẩm</span>
+                </h3>
+                <div style="font-size:0.92rem; color:#374151; line-height:1.7; word-break:break-word;">
+                  ${formattedDesc}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        `;
+
+        // ── Attach cart events (Guest Guard) ──
+        document.getElementById('btn-add-cart').addEventListener('click', () => {
+          window.requireLogin(() => {
+            if(window.Cart) window.Cart.addToCart(p);
+          });
+        });
+        document.getElementById('btn-buy-now').addEventListener('click', () => {
+          window.requireLogin(() => {
+            if(window.Cart) {
+              window.Cart.addToCart(p);
+              window.location.href = 'cart.html';
+            }
+          });
+        });
+
+        // ══════════════════════════════════════════════
+        //  Gallery: auto-slideshow + click thumbnail
+        // ══════════════════════════════════════════════
+        const mainImg   = document.getElementById('gallery-main-img');
+        const thumbEls  = document.querySelectorAll('#gallery-thumbs .gallery-thumb');
+        let currentIdx  = 0;
+        let autoTimer   = null;
+
+        /**
+         * Chuyển ảnh chính sang index idx với hiệu ứng fade
+         */
+        function showImage(idx) {
+          const total = allImages.length;
+          currentIdx  = (idx + total) % total;
+
+          // Fade out → đổi src → fade in
+          mainImg.classList.add('fading');
+          setTimeout(() => {
+            mainImg.src = allImages[currentIdx];
+            mainImg.classList.remove('fading');
+          }, 400);
+
+          // Cập nhật viền active trên thumbnail
+          thumbEls.forEach((th, i) => {
+            th.classList.toggle('active', i === currentIdx);
+          });
+
+          // Cuộn thumbnail vào vùng nhìn thấy
+          if (thumbEls[currentIdx]) {
+            thumbEls[currentIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+
+        /** Reset và khởi động lại bộ đếm tự động */
+        function resetAutoTimer() {
+          clearInterval(autoTimer);
+          autoTimer = setInterval(() => showImage(currentIdx + 1), 6000); // ~6s (trong 5-7s)
+        }
+
+        // Click vào thumbnail → đổi ảnh chính + reset timer
+        thumbEls.forEach((th, i) => {
+          th.addEventListener('click', () => {
+            showImage(i);
+            resetAutoTimer();
+          });
+        });
+
+        // Khởi động auto-slide (chỉ khi có > 1 ảnh)
+        if (allImages.length > 1) {
+          resetAutoTimer();
+        }
+      } catch (e) {
+        detailEl.innerHTML = `<p>Lỗi tải sản phẩm: ${e.message}</p>`;
+      }
+    }
+
+    // Search button (redirect to search.html with query)
+    function executeHeaderSearch() {
+      const term = document.getElementById('search-input').value.trim();
+      if (term) {
+        window.location.href = 'products.html?search=' + encodeURIComponent(term);
+      }
+    }
+    const searchBtn = document.getElementById('search-btn');
+    const searchInput = document.getElementById('search-input');
+    if (searchBtn) searchBtn.addEventListener('click', executeHeaderSearch);
+    if (searchInput) searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') executeHeaderSearch();
+    });
+
+    loadProduct();
+  </script>
+</body>
+</html>

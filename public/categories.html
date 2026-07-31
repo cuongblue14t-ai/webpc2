@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nam Nguyễn PC & Workstation - Danh mục sản phẩm</title>
+  <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="Nam Nguyễn PC & Workstation Logo" class="logo-img">
+        <div class="company-brand-text">
+          <span class="company-title">NAM NGUYỄN</span>
+          <span class="company-sub">PC & WORKSTATION</span>
+        </div>
+      </a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="categories.html" class="active">Danh mục</a></li>
+        <li><a href="products.html">Sản phẩm</a></li>
+        <li><a href="promotions.html" class="promo-link-highlight">🔥 Khuyến Mãi</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+        <li><a href="cart.html" class="cart-link">🛒 Giỏ hàng (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+    <div class="search-wrap">
+      <input type="text" placeholder="Tìm kiếm sản phẩm..." id="search-input" />
+      <button id="search-btn">🔍</button>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  </header>
+
+  <main class="site-main">
+    <!-- Categories Grid Section -->
+    <section class="categories-section" style="max-width: 1200px; margin: 1.5rem auto 3rem auto; padding: 0 1rem;">
+      <h2 class="section-title" style="text-align:center; font-size:1.8rem; font-weight:800; color:var(--dark); margin-bottom:2rem;">DANH MỤC SẢN PHẨM</h2>
+      <div class="category-grid" id="category-grid">
+        <!-- 12 category cards injected via JS -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 NAM NGUYỄN PC & WORKSTATION. All rights reserved.</p>
+  </footer>
+
+  <script src="cart.js?v=2"></script>
+  <script src="zalo-qr-modal.js"></script>
+  <script src="auth-modal.js"></script>
+  <script>
+    async function loadCategoriesGrid() {
+      try {
+        const catRes = await fetch('/api/categories');
+        const cats = await catRes.json();
+        
+        const categoryGrid = document.getElementById('category-grid');
+        if (categoryGrid) {
+          categoryGrid.innerHTML = '';
+          cats.forEach(cat => {
+            const card = document.createElement('div');
+            card.className = 'category-card';
+            const imgHTML = cat.hinh_anh ? `<div class="cat-img-wrap"><img src="${cat.hinh_anh}" alt="${cat.ten_danh_muc}"></div>` : '';
+            const countBadge = cat.so_luong_san_pham !== undefined ? `<span style="font-size:0.8rem; color:#f97316; font-weight:700; margin-left:6px; background:#fff7ed; padding:2px 8px; border-radius:12px; border:1px solid #ffedd5;">${cat.so_luong_san_pham} sản phẩm</span>` : '';
+            card.innerHTML = `<a href="products.html?cat=${cat.id}">${imgHTML}<span class="cat-title">${cat.ten_danh_muc} ${countBadge}</span></a>`;
+            categoryGrid.appendChild(card);
+          });
+        }
+      } catch (e) {
+        console.error('Lỗi tải danh mục:', e);
+      }
+    }
+
+    function executeHeaderSearch() {
+      const term = document.getElementById('search-input').value.trim();
+      if (term) {
+        window.location.href = 'products.html?search=' + encodeURIComponent(term);
+      }
+    }
+    const searchBtn = document.getElementById('search-btn');
+    const searchInput = document.getElementById('search-input');
+    if (searchBtn) searchBtn.addEventListener('click', executeHeaderSearch);
+    if (searchInput) searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') executeHeaderSearch();
+    });
+
+    loadCategoriesGrid();
+  </script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanh Toán - WebPC</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .checkout-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; display: grid; grid-template-columns: 3fr 2fr; gap: 2rem; }
+    
+    .checkout-form-panel { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .checkout-form-panel h2 { margin-bottom: 1.5rem; color: var(--dark); font-size: 1.5rem; border-bottom: 2px solid var(--orange); padding-bottom: 0.5rem; display: inline-block; }
+    
+    .checkout-summary-panel { background: #f9fafb; padding: 2rem; border-radius: 8px; border: 1px solid #e5e7eb; height: fit-content; }
+    .checkout-summary-panel h3 { margin-bottom: 1.5rem; color: var(--dark); font-size: 1.3rem; }
+    
+    .summary-item { display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
+    .summary-item-info { display: flex; gap: 1rem; align-items: center; }
+    .summary-item-img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+    .summary-item-name { font-size: 0.9rem; font-weight: 600; color: var(--dark); }
+    .summary-item-qty { font-size: 0.85rem; color: #6b7280; }
+    .summary-item-price { font-weight: 600; color: var(--dark); }
+    
+    .summary-total { display: flex; justify-content: space-between; margin-top: 1.5rem; font-size: 1.2rem; font-weight: 700; }
+    .summary-total .total-price { color: var(--red); font-size: 1.4rem; }
+
+    /* Form Styles */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--dark); }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.7rem 0.9rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; background: #fff; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 2px rgba(249,115,22,0.1); }
+    
+    .payment-methods { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.5rem; }
+    .payment-method { border: 1px solid #d1d5db; padding: 1rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.8rem; transition: border-color 0.2s; }
+    .payment-method:has(input:checked) { border-color: var(--orange); background: #fff8f0; }
+    .payment-method input { width: auto; margin: 0; }
+    .payment-method label { margin: 0; cursor: pointer; width: 100%; font-weight: 500; font-size: 0.95rem; }
+
+    .pay-tab-btn {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      padding: 0.45rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #4b5563;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pay-tab-btn.active-pay-tab {
+      background: var(--orange);
+      color: #fff;
+      border-color: var(--orange);
+    }
+
+    .btn-place-order { width: 100%; background: var(--red); color: #fff; padding: 1rem; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: 700; cursor: pointer; margin-top: 1.5rem; transition: background 0.2s; text-transform: uppercase; }
+    .btn-place-order:hover { background: #b91c1c; }
+    .btn-place-order:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .required { color: var(--red); }
+
+    .success-message { text-align: center; padding: 3rem; display: none; }
+    .success-message h2 { color: #059669; margin-bottom: 1rem; font-size: 2rem; }
+    .success-message p { color: #4b5563; margin-bottom: 2rem; }
+
+    @media (max-width: 900px) {
+      .checkout-container { grid-template-columns: 1fr; }
+      .checkout-summary-panel { order: -1; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="Nam Nguyễn PC & Workstation Logo" class="logo-img">
+        <div class="company-brand-text">
+          <span class="company-title">NAM NGUYỄN</span>
+          <span class="company-sub">PC & WORKSTATION</span>
+        </div>
+      </a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="categories.html">Danh mục</a></li>
+        <li><a href="products.html">Sản phẩm</a></li>
+        <li><a href="promotions.html" class="promo-link-highlight">🔥 Khuyến Mãi</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+        <li><a href="cart.html" class="cart-link">🛒 Giỏ hàng (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  </header>
+
+  <main class="site-main">
+    <div id="checkout-content" class="checkout-container">
+      
+      <!-- Thông tin đặt hàng -->
+      <div class="checkout-form-panel">
+        <h2>Thông tin thanh toán</h2>
+        <form id="checkout-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ho_ten">Họ và tên <span class="required">*</span></label>
+              <input type="text" id="ho_ten" required placeholder="Nhập họ và tên đầy đủ" />
+            </div>
+            <div class="form-group">
+              <label for="so_dien_thoai">Số điện thoại <span class="required">*</span></label>
+              <input type="tel" id="so_dien_thoai" required placeholder="Nhập số điện thoại" />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="email">Địa chỉ Email (Nhận thông báo đơn hàng)</label>
+            <input type="email" id="email" placeholder="ví dụ: khachhang@gmail.com" />
+          </div>
+
+          <div class="form-group">
+            <label for="dia_chi">Địa chỉ giao hàng <span class="required">*</span></label>
+            <input type="text" id="dia_chi" required placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành" />
+          </div>
+
+          <div class="form-group">
+            <label for="ghi_chu">Ghi chú đơn hàng (Tùy chọn)</label>
+            <textarea id="ghi_chu" rows="3" placeholder="Ghi chú về thời gian nhận hàng hoặc yêu cầu riêng..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="phuong_thuc_nhan_hang">Phương thức nhận hàng <span class="required">*</span></label>
+            <select id="phuong_thuc_nhan_hang">
+              <option value="Giao tận nơi">Giao hàng tận nơi (Toàn quốc)</option>
+              <option value="Nhận tại cửa hàng">Nhận tại cửa hàng (Thái Nguyên)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Phương thức thanh toán <span class="required">*</span></label>
+            <div class="payment-methods">
+              <div class="payment-method">
+                <input type="radio" id="pay_cod" name="phuong_thuc_thanh_toan" value="Thanh toán khi nhận hàng (COD)" checked onchange="togglePaymentDetails()">
+                <label for="pay_cod">💵 Thanh toán khi nhận hàng (COD)</label>
+              </div>
+              
+              <div class="payment-method" style="flex-wrap: wrap;">
+                <div style="display:flex; align-items:center; gap:0.8rem; width:100%;">
+                  <input type="radio" id="pay_bank" name="phuong_thuc_thanh_toan" value="Chuyển khoản ngân hàng" onchange="togglePaymentDetails()">
+                  <label for="pay_bank">🏦 Chuyển khoản ngân hàng (Mã QR VietQR / Thẻ tín dụng)</label>
+                </div>
+
+                <!-- Expanding Bank & Card Option Box -->
+                <div id="bank-details-box" style="display:none; width:100%; margin-top:0.8rem; background:#ffffff; border:1px solid #e5e7eb; border-radius:8px; padding:1.2rem; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                  
+                  <!-- Sub-tabs selection -->
+                  <div style="display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.6rem;">
+                    <button type="button" id="tab-btn-qr" class="pay-tab-btn active-pay-tab" onclick="switchPaySubTab('qr')">📱 Quét Mã QR Ngân Hàng (VietQR)</button>
+                    <button type="button" id="tab-btn-card" class="pay-tab-btn" onclick="switchPaySubTab('card')">💳 Thẻ Tín Dụng / Ghi Nợ (Visa/Mastercard)</button>
+                  </div>
+
+                  <!-- Tab 1: VietQR -->
+                  <div id="subtab-qr" class="pay-subtab-content">
+                    <div style="display:grid; grid-template-columns: 150px 1fr; gap:1.2rem; align-items:center;">
+                      <div style="text-align:center; background:#f9fafb; padding:8px; border-radius:8px; border:1px solid #e5e7eb;">
+                        <img id="checkout-vietqr-img" src="" alt="Mã QR VietQR" style="width:100%; max-width:130px; height:auto; border-radius:6px; display:block; margin:0 auto;">
+                        <span style="font-size:0.72rem; color:#6b7280; margin-top:4px; display:block; font-weight:600;">Quét qua Banking App</span>
+                      </div>
+                      <div style="font-size:0.88rem; color:#374151; line-height:1.6;">
+                        <div style="margin-bottom:4px;">🏦 <strong>Ngân hàng:</strong> <span style="color:#1d4ed8; font-weight:700;">MBBank (Ngân hàng Quân Đội)</span></div>
+                        <div style="margin-bottom:4px;">💳 <strong>Số tài khoản:</strong> <span style="color:#059669; font-weight:800; font-size:1.05rem; letter-spacing:0.5px;">0335 029 999</span></div>
+                        <div style="margin-bottom:4px;">👤 <strong>Chủ tài khoản:</strong> <span style="font-weight:700;">NAM NGUYEN PC WORKSTATION</span></div>
+                        <div style="margin-bottom:4px;">💰 <strong>Số tiền:</strong> <span id="qr-pay-amount" style="color:#dc2626; font-weight:800; font-size:1rem;">0₫</span></div>
+                        <div style="font-size:0.8rem; background:#fef3c7; color:#92400e; padding:6px 10px; border-radius:6px; margin-top:6px; border:1px solid #fde68a;">
+                          📌 <strong>Nội dung CK:</strong> <span id="qr-pay-memo" style="font-weight:700;">THANHTOAN WEBPC</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tab 2: Credit / Debit Card -->
+                  <div id="subtab-card" class="pay-subtab-content" style="display:none;">
+                    <div style="display:grid; gap:0.8rem;">
+                      <div>
+                        <label style="font-size:0.8rem; font-weight:600; color:#374151;">Số thẻ (Card Number)</label>
+                        <div style="position:relative;">
+                          <input type="text" id="card_number" placeholder="4111 2222 3333 4444" maxlength="19" style="padding-right:80px; font-family: 'Arimo', Arial, Helvetica, sans-serif !important; letter-spacing:1px;" oninput="formatCardNumber(this)">
+                          <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:0.8rem; font-weight:800; color:#2563eb;">VISA / MC</span>
+                        </div>
+                      </div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+                        <div>
+                          <label style="font-size:0.8rem; font-weight:600; color:#374151;">Ngày hết hạn (MM/YY)</label>
+                          <input type="text" id="card_expiry" placeholder="12/28" maxlength="5">
+                        </div>
+                        <div>
+                          <label style="font-size:0.8rem; font-weight:600; color:#374151;">Mã CVV/CVC</label>
+                          <input type="password" id="card_cvv" placeholder="•••" maxlength="4" style="font-family: 'Arimo', Arial, Helvetica, sans-serif !important;">
+                        </div>
+                      </div>
+                      <div>
+                        <label style="font-size:0.8rem; font-weight:600; color:#374151;">Tên in trên thẻ (Cardholder Name)</label>
+                        <input type="text" id="card_holder" placeholder="NGUYEN VAN A" style="text-transform:uppercase;">
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-place-order" id="btn-submit">ĐẶT HÀNG NGAY</button>
+          <div id="form-error" style="color:var(--red); margin-top:1rem; text-align:center; font-weight:bold;"></div>
+        </form>
+      </div>
+
+      <!-- Tóm tắt đơn hàng -->
+      <div class="checkout-summary-panel">
+        <h3>Đơn hàng của bạn</h3>
+        <div id="summary-items">
+          <!-- Injected via JS -->
+        </div>
+        <div class="summary-total">
+          <span>Tổng thanh toán:</span>
+          <span class="total-price" id="summary-total-price">0₫</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Màn hình thành công -->
+    <div id="success-view" class="success-message">
+      <div style="background:#fff; max-width:650px; margin:0 auto; padding:2.5rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.08); text-align:center;">
+        <div style="font-size:3rem; margin-bottom:0.5rem;">🎉</div>
+        <h2 style="color:#059669; font-size:1.8rem; margin-bottom:0.5rem;">Đặt Hàng Thành Công!</h2>
+        <p style="color:#4b5563; margin-bottom:1.5rem;">Cảm ơn quý khách đã mua sắm tại <strong>Nam Nguyễn PC & Workstation</strong>. Mã đơn hàng của bạn là <strong id="success-order-id" style="color:var(--orange); font-size:1.2rem;">#--</strong>.</p>
+        
+        <!-- Khung hướng dẫn thanh toán QR nếu chọn Chuyển khoản -->
+        <div id="success-payment-instructions" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:1.5rem; margin-bottom:1.5rem; text-align:left;">
+          <h4 style="margin-top:0; color:#166534; font-size:1.05rem; display:flex; align-items:center; gap:8px;">
+            <span>📱 Hướng dẫn Thanh toán Chuyển khoản qua mã VietQR</span>
+          </h4>
+          <div style="display:grid; grid-template-columns:140px 1fr; gap:1.2rem; align-items:center; margin-top:1rem;">
+            <img id="success-vietqr-img" src="" alt="Mã QR Chuyển Khoản" style="width:100%; border-radius:8px; border:1px solid #cbd5e1;">
+            <div style="font-size:0.9rem; color:#1e293b; line-height:1.6;">
+              <div>🏦 <strong>Ngân hàng:</strong> MBBank (Quân Đội)</div>
+              <div>💳 <strong>Số tài khoản:</strong> <span style="color:#059669; font-weight:800; font-size:1.05rem;">0335 029 999</span></div>
+              <div>👤 <strong>Chủ tài khoản:</strong> NAM NGUYEN PC WORKSTATION</div>
+              <div>💰 <strong>Số tiền:</strong> <span id="success-order-amount" style="color:#dc2626; font-weight:800;">0₫</span></div>
+              <div style="margin-top:6px; background:#fef3c7; color:#92400e; padding:6px 10px; border-radius:6px; font-size:0.85rem; border:1px solid #fde68a;">
+                📌 <strong>Nội dung CK:</strong> <span id="success-order-memo" style="font-weight:700;">DH--</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-sm" style="width:100%; margin-top:1rem; background:#16a34a; color:#fff; border:none; padding:0.7rem; border-radius:6px; font-weight:700; cursor:pointer;" onclick="alert('Cảm ơn bạn! Hệ thống đã ghi nhận yêu cầu xác nhận chuyển khoản. Quản trị viên sẽ duyệt đơn hàng ngay khi nhận được tiền.')">
+            ✅ Tôi đã hoàn tất chuyển khoản
+          </button>
+        </div>
+
+        <a href="index.html" class="btn-place-order" style="text-decoration:none; display:inline-block; padding:0.8rem 2rem; width:auto; text-transform:none;">Quay về Trang chủ</a>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 NAM NGUYỄN PC & WORKSTATION. All rights reserved.</p>
+  </footer>
+
+  <script src="cart.js"></script>
+  <script src="auth-modal.js"></script>
+  <script>
+    // ── Guest Guard: chưa đăng nhập → không được thanh toán ──
+    (function() {
+      const token = localStorage.getItem('customer_token') || sessionStorage.getItem('customer_token');
+      if (!token) {
+        document.addEventListener('DOMContentLoaded', () => {
+          const content = document.getElementById('checkout-content');
+          const success = document.getElementById('success-view');
+          if (content) content.style.display = 'none';
+          if (success) success.style.display = 'none';
+
+          const main = document.querySelector('.site-main');
+          if (main) {
+            const notice = document.createElement('div');
+            notice.style.cssText = 'max-width:500px;margin:4rem auto;text-align:center;background:#fff;border-radius:12px;padding:2.5rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);';
+            notice.innerHTML = `
+              <div style="font-size:4rem;margin-bottom:1rem;">🔐</div>
+              <h2 style="color:#374151;margin-bottom:0.75rem;">Yêu cầu đăng nhập</h2>
+              <p style="color:#6b7280;margin-bottom:1.5rem;">Bạn cần đăng nhập để tiến hành thanh toán đơn hàng.</p>
+              <button
+                id="btn-checkout-login"
+                style="background:var(--orange,#F97316);color:#fff;border:none;padding:0.85rem 2.5rem;border-radius:8px;font-size:1.05rem;font-weight:700;cursor:pointer;display:inline-block;"
+              >🔑 Đăng nhập ngay</button>
+              <br><br>
+              <a href="index.html" style="color:#6b7280;font-size:0.9rem;">← Quay về trang chủ</a>
+            `;
+            main.prepend(notice);
+
+            document.getElementById('btn-checkout-login').addEventListener('click', () => {
+              if (window.openAuthModal) {
+                window.openAuthModal('login');
+              } else {
+                window.location.href = 'index.html';
+              }
+            });
+          }
+        });
+      }
+    })();
+
+    let currentPaySubTab = 'qr';
+
+    function togglePaymentDetails() {
+      const isBankSelected = document.getElementById('pay_bank').checked;
+      const bankBox = document.getElementById('bank-details-box');
+      if (bankBox) {
+        bankBox.style.display = isBankSelected ? 'block' : 'none';
+      }
+      if (isBankSelected) {
+        updateVietQRInfo();
+      }
+    }
+
+    function switchPaySubTab(tabName) {
+      currentPaySubTab = tabName;
+      const tabQr = document.getElementById('tab-btn-qr');
+      const tabCard = document.getElementById('tab-btn-card');
+      const subtabQr = document.getElementById('subtab-qr');
+      const subtabCard = document.getElementById('subtab-card');
+
+      if (tabName === 'qr') {
+        tabQr.classList.add('active-pay-tab');
+        tabCard.classList.remove('active-pay-tab');
+        subtabQr.style.display = 'block';
+        subtabCard.style.display = 'none';
+      } else {
+        tabCard.classList.add('active-pay-tab');
+        tabQr.classList.remove('active-pay-tab');
+        subtabCard.style.display = 'block';
+        subtabQr.style.display = 'none';
+      }
+    }
+
+    function formatCardNumber(input) {
+      let v = input.value.replace(/\s+/g, '').replace(/[^0-9]/g, '');
+      let matches = v.match(/\d{4,16}/g);
+      let match = (matches && matches[0]) || '';
+      let parts = [];
+      for (let i = 0, len = match.length; i < len; i += 4) {
+        parts.push(match.substring(i, i + 4));
+      }
+      if (parts.length) {
+        input.value = parts.join(' ');
+      } else {
+        input.value = v;
+      }
+    }
+
+    function updateVietQRInfo() {
+      const total = window.Cart.getCartTotal();
+      const phone = document.getElementById('so_dien_thoai').value.trim() || 'KH';
+      const memo = `THANHTOAN WEBPC ${phone}`;
+      
+      const qrAmountEl = document.getElementById('qr-pay-amount');
+      const qrMemoEl = document.getElementById('qr-pay-memo');
+      const qrImgEl = document.getElementById('checkout-vietqr-img');
+
+      if (qrAmountEl) qrAmountEl.textContent = total.toLocaleString('vi-VN') + '₫';
+      if (qrMemoEl) qrMemoEl.textContent = memo;
+
+      if (qrImgEl) {
+        const bankId = 'MB';
+        const accountNo = '0335029999';
+        const accountName = 'NAM NGUYEN PC WORKSTATION';
+        qrImgEl.src = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact.png?amount=${total}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(accountName)}`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const cart = window.Cart.getCart();
+      if (cart.length === 0) {
+        alert('Giỏ hàng trống! Vui lòng chọn sản phẩm trước khi thanh toán.');
+        window.location.href = 'cart.html';
+        return;
+      }
+
+      // Auto-fill logged-in customer info if available
+      const userStr = localStorage.getItem('customer_user') || sessionStorage.getItem('customer_user');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (user.fullName && !document.getElementById('ho_ten').value) document.getElementById('ho_ten').value = user.fullName;
+          if (user.phone && !document.getElementById('so_dien_thoai').value) document.getElementById('so_dien_thoai').value = user.phone;
+          if (user.email && !document.getElementById('email').value) document.getElementById('email').value = user.email;
+          if (user.address && !document.getElementById('dia_chi').value) document.getElementById('dia_chi').value = user.address;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // Render summary
+      const summaryItemsEl = document.getElementById('summary-items');
+      let html = '';
+      cart.forEach(item => {
+        html += `
+          <div class="summary-item">
+            <div class="summary-item-info">
+              <img src="${item.duong_dan_anh}" alt="${item.ten_san_pham}" class="summary-item-img">
+              <div>
+                <div class="summary-item-name">${item.ten_san_pham}</div>
+                <div class="summary-item-qty">Số lượng: ${item.quantity}</div>
+              </div>
+            </div>
+            <div class="summary-item-price">${(item.gia * item.quantity).toLocaleString('vi-VN')}₫</div>
+          </div>
+        `;
+      });
+      summaryItemsEl.innerHTML = html;
+      const totalAmount = window.Cart.getCartTotal();
+      document.getElementById('summary-total-price').textContent = totalAmount.toLocaleString('vi-VN') + '₫';
+
+      // Attach phone input listener for QR Memo auto update
+      const phoneInput = document.getElementById('so_dien_thoai');
+      if (phoneInput) {
+        phoneInput.addEventListener('input', updateVietQRInfo);
+      }
+    });
+
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btnSubmit = document.getElementById('btn-submit');
+      const errEl = document.getElementById('form-error');
+      
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Đang xử lý...';
+      errEl.textContent = '';
+
+      const cart = window.Cart.getCart();
+      const userStr = localStorage.getItem('customer_user') || sessionStorage.getItem('customer_user');
+      const token = localStorage.getItem('customer_token') || sessionStorage.getItem('customer_token');
+      let userId = null;
+      if (userStr) {
+        try { userId = JSON.parse(userStr).id; } catch(e){}
+      }
+
+      const isBankSelected = document.getElementById('pay_bank').checked;
+      let finalPaymentMethod = document.querySelector('input[name="phuong_thuc_thanh_toan"]:checked').value;
+
+      if (isBankSelected) {
+        if (currentPaySubTab === 'card') {
+          const cardNumber = document.getElementById('card_number').value.trim();
+          const cardExpiry = document.getElementById('card_expiry').value.trim();
+          const cardCvv = document.getElementById('card_cvv').value.trim();
+          const cardHolder = document.getElementById('card_holder').value.trim();
+
+          if (!cardNumber || !cardExpiry || !cardCvv || !cardHolder) {
+            errEl.textContent = 'Vui lòng nhập đầy đủ thông tin Thẻ tín dụng!';
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'ĐẶT HÀNG NGAY';
+            return;
+          }
+          finalPaymentMethod = `Thẻ tín dụng Visa/Mastercard (**** ${cardNumber.slice(-4)})`;
+        } else {
+          finalPaymentMethod = 'Chuyển khoản qua mã VietQR Ngân hàng';
+        }
+      }
+
+      const totalOrderAmount = window.Cart.getCartTotal();
+
+      const orderData = {
+        ho_ten: document.getElementById('ho_ten').value.trim(),
+        so_dien_thoai: document.getElementById('so_dien_thoai').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        dia_chi: document.getElementById('dia_chi').value.trim(),
+        ghi_chu: document.getElementById('ghi_chu').value.trim(),
+        phuong_thuc_nhan_hang: document.getElementById('phuong_thuc_nhan_hang').value,
+        phuong_thuc_thanh_toan: finalPaymentMethod,
+        items: cart.map(item => ({ id: item.id, quantity: item.quantity })),
+        userId: userId
+      };
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      try {
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(orderData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          window.Cart.clearCart();
+          document.getElementById('checkout-content').style.display = 'none';
+          document.getElementById('success-view').style.display = 'block';
+
+          const orderId = result.orderId || result.id || Math.floor(Math.random() * 8999 + 1000);
+          document.getElementById('success-order-id').textContent = `#${orderId}`;
+
+          if (isBankSelected && currentPaySubTab === 'qr') {
+            const successInstructions = document.getElementById('success-payment-instructions');
+            const memo = `DH${orderId}`;
+
+            document.getElementById('success-order-amount').textContent = totalOrderAmount.toLocaleString('vi-VN') + '₫';
+            document.getElementById('success-order-memo').textContent = memo;
+            document.getElementById('success-vietqr-img').src = `https://img.vietqr.io/image/MB-0335029999-compact.png?amount=${totalOrderAmount}&addInfo=${encodeURIComponent(memo)}&accountName=NAM%20NGUYEN%20PC%20WORKSTATION`;
+            
+            if (successInstructions) successInstructions.style.display = 'block';
+          }
+        } else {
+          errEl.textContent = result.error || 'Có lỗi xảy ra khi đặt hàng!';
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'ĐẶT HÀNG NGAY';
+        }
+      } catch (err) {
+        console.error(err);
+        errEl.textContent = 'Lỗi kết nối. Vui lòng thử lại!';
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'ĐẶT HÀNG NGAY';
+      }
+    });
+  </script>
+</body>
+</html>
