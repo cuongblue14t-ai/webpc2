@@ -189,12 +189,30 @@
         const grid = document.getElementById('category-grid');
         if (!grid) return;
         grid.innerHTML = '';
+
+        const defaultCatImages = {
+          'CPU PC': 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=400',
+          'CPU SEVER': 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=400',
+          'MAINBOARD PC': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400',
+          'MAINBOARD SEVER': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400',
+          'RAM PC': 'https://images.unsplash.com/photo-1562976540-1502c2145186?w=400',
+          'RAM SEVER': 'https://images.unsplash.com/photo-1562976540-1502c2145186?w=400',
+          'CARD ĐỒ HỌA': 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400',
+          'VỎ MÁY TÍNH': 'https://images.unsplash.com/photo-1547082299-de196ea013d6?w=400',
+          'MÀN HÌNH MÁY TÍNH': 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400',
+          'NGUỒN MÁY TÍNH': 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400',
+          'Ổ CỨNG SSD': 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400',
+          'TẢN NHIỆT CPU': 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'
+        };
+
         cats.forEach(cat => {
           const card = document.createElement('div');
           card.className = 'category-card';
-          const imgHTML = cat.hinh_anh 
-            ? `<div class="cat-img-wrap"><img src="${cat.hinh_anh}" alt="${cat.ten_danh_muc}" onerror="this.onerror=null; this.src='placeholder.png';"></div>` 
-            : `<div class="cat-img-wrap"><img src="placeholder.png" alt="${cat.ten_danh_muc}"></div>`;
+          const imgSrc = (cat.hinh_anh && cat.hinh_anh.startsWith('http')) 
+            ? cat.hinh_anh 
+            : (defaultCatImages[cat.ten_danh_muc] || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400');
+            
+          const imgHTML = `<div class="cat-img-wrap"><img src="${imgSrc}" alt="${cat.ten_danh_muc}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400';"></div>`;
           const countBadge = cat.so_luong_san_pham !== undefined ? `<span style="font-size:0.75rem; color:#f97316; font-weight:700; margin-left:4px; background:#fff7ed; padding:2px 6px; border-radius:10px; border:1px solid #ffedd5;">${cat.so_luong_san_pham} SP</span>` : '';
           card.innerHTML = `<a href="categories.html?cat=${cat.id}">${imgHTML}<span class="cat-title">${cat.ten_danh_muc} ${countBadge}</span></a>`;
           grid.appendChild(card);

@@ -25,7 +25,10 @@ router.get('/', async (req, res) => {
       SELECT dm.id, dm.ten_danh_muc, dm.mo_ta, dm.trang_thai,
              COUNT(sp.id) AS so_luong_san_pham,
              COALESCE(
-               NULLIF(dm.hinh_anh, ''),
+               CASE 
+                 WHEN dm.hinh_anh LIKE 'http%' THEN dm.hinh_anh
+                 ELSE NULL
+               END,
                (SELECT asp.duong_dan 
                 FROM anh_san_pham asp 
                 JOIN san_pham sp_sub ON asp.id_san_pham = sp_sub.id 
