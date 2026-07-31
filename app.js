@@ -156,9 +156,10 @@ async function initDb() {
     // Auto-migrate any remaining external images in DB to local /uploads/ storage
     await autoMigrateExistingImages(db);
 
-    conn.release();
   } catch (err) {
-    console.error('⚠️ MySQL connection/migration error:', err.message);
+    console.error('⚠️ MySQL connection/migration notice:', err.message);
+  } finally {
+    if (conn) conn.release();
   }
 }
 
