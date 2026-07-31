@@ -35,6 +35,16 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Explicit root route serving index.html
+app.get('/', (req, res) => {
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.send('Server is running');
+});
+
+
 
 app.use(bodyParser.json());
 app.use('/api/categories', categoriesRouter);
