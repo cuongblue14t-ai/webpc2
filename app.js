@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
 const categoriesRouter = require('./routes/categories');
 const productsRouter = require('./routes/products');
 const bannersRouter = require('./routes/banners');
@@ -58,8 +59,9 @@ app.use('/api/stats', statsRouter);
 
 // Test DB connection & auto-add classification/user columns
 async function initDb() {
+  let conn;
   try {
-    const conn = await db.getConnection();
+    conn = await db.getConnection();
     console.log('✅ Connected to MySQL (ban_hang_db)');
     
     // Check and add classification columns to san_pham table if missing
