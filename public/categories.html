@@ -80,9 +80,7 @@
           cats.forEach(cat => {
             const card = document.createElement('div');
             card.className = 'category-card';
-            const imgSrc = (cat.hinh_anh && cat.hinh_anh.startsWith('http')) 
-              ? cat.hinh_anh 
-              : (defaultCatImages[cat.ten_danh_muc] || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400');
+            const imgSrc = defaultCatImages[cat.ten_danh_muc] || (cat.hinh_anh && cat.hinh_anh.startsWith('http') ? cat.hinh_anh : 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400');
               
             const imgHTML = `<div class="cat-img-wrap"><img src="${imgSrc}" alt="${cat.ten_danh_muc}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400';"></div>`;
             const countBadge = cat.so_luong_san_pham !== undefined ? `<span style="font-size:0.8rem; color:#f97316; font-weight:700; margin-left:6px; background:#fff7ed; padding:2px 8px; border-radius:12px; border:1px solid #ffedd5;">${cat.so_luong_san_pham} sản phẩm</span>` : '';
