@@ -69,7 +69,7 @@ function deleteLocalImage(imagePath) {
 // GET all products (Supports category, brand, tag filters and search query)
 router.get('/', async (req, res) => {
   try {
-    const { category, brand, search, tag } = req.query;
+    const { category, brand, search, tag, include_hidden, status } = req.query;
     let sql = `
       SELECT sp.*, dm.ten_danh_muc,
              (SELECT duong_dan FROM anh_san_pham WHERE id_san_pham = sp.id ORDER BY anh_chinh DESC, id ASC LIMIT 1) AS duong_dan_anh
@@ -78,6 +78,14 @@ router.get('/', async (req, res) => {
       WHERE sp.is_deleted = 0
     `;
     const params = [];
+
+    // Filter hidden products unless include_hidden === 'true' or '1'
+    if (include_hidden !== 'true' && include_hidden !== '1') {
+      sql += ' AND sp.trang_thai = 1';
+    } else if (status !== undefined && status !== '' && status !== 'All') {
+      sql += ' AND sp.trang_thai = ?';
+      params.push(status === '1' || status === 1 ? 1 : 0);
+    }
 
     if (category && category !== 'All') {
       sql += ' AND (dm.ten_danh_muc = ? OR sp.id_danh_muc = ?)';
@@ -195,14 +203,17 @@ router.post('/history/batch-delete', verifyToken, verifyAdmin, async (req, res) 
 // GET one product (includes dynamic specifications and images)
 router.get('/:id', async (req, res) => {
   try {
-    const [productRows] = await db.execute(
-      `SELECT sp.*, dm.ten_danh_muc 
-       FROM san_pham sp 
-       LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id 
-       WHERE sp.id = ? AND sp.is_deleted = 0`,
-      [req.params.id]
-    );
-    if (productRows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    const includeHidden = req.query.include_hidden === 'true' || req.query.include_hidden === '1';
+    let sql = `SELECT sp.*, dm.ten_danh_muc 
+               FROM san_pham sp 
+               LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id 
+               WHERE sp.id = ? AND sp.is_deleted = 0`;
+    const params = [req.params.id];
+    if (!includeHidden) {
+      sql += ' AND sp.trang_thai = 1';
+    }
+    const [productRows] = await db.execute(sql, params);
+    if (productRows.length === 0) return res.status(404).json({ error: 'Sản phẩm không tồn tại hoặc đã bị ẩn' });
     const product = productRows[0];
 
     // Fetch images
@@ -233,6 +244,51 @@ router.get('/:id', async (req, res) => {
     res.json(product);
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// PATCH update product visibility status (Hide/Unhide)
+router.patch('/:id/status', verifyToken, verifyAdminOrManager, async (req, res) => {
+  const productId = req.params.id;
+  const { trang_thai } = req.body;
+  if (trang_thai === undefined) {
+    return res.status(400).json({ error: 'Trạng thái không hợp lệ' });
+  }
+
+  const newStatus = (trang_thai === 1 || trang_thai === '1' || trang_thai === true || trang_thai === 'true') ? 1 : 0;
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [prodRows] = await connection.execute(
+      'SELECT id, ten_san_pham, trang_thai FROM san_pham WHERE id = ? AND is_deleted = 0',
+      [productId]
+    );
+    if (prodRows.length === 0) {
+      connection.release();
+      return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
+    }
+    const oldProd = prodRows[0];
+
+    await connection.execute(
+      'UPDATE san_pham SET trang_thai = ? WHERE id = ? AND is_deleted = 0',
+      [newStatus, productId]
+    );
+
+    const logUserId = await getValidUserId(connection, req.user ? req.user.id : null);
+    const statusText = newStatus === 1 ? 'Hiển thị' : 'Ẩn';
+    await connection.execute(
+      'INSERT INTO lich_su_chinh_sua_san_pham (id_san_pham, id_tai_khoan, hanh_dong, chi_tiet_thay_doi) VALUES (?, ?, ?, ?)',
+      [productId, logUserId, 'Cập nhật trạng thái', `Chuyển trạng thái sản phẩm "${oldProd.ten_san_pham}" sang: ${statusText}`]
+    );
+
+    await connection.commit();
+    res.json({ message: `Đã đổi trạng thái sản phẩm sang ${statusText}`, trang_thai: newStatus });
+  } catch (e) {
+    await connection.rollback();
+    res.status(500).json({ error: e.message });
+  } finally {
+    connection.release();
   }
 });
 

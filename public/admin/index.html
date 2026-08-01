@@ -1038,7 +1038,14 @@
                 <option value="All">Tất cả danh mục</option>
               </select>
             </div>
-
+            <div>
+              <label style="font-weight:600; font-size:0.85rem;">Trạng thái hiển thị</label><br>
+              <select id="prod-status-filter" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-top:4px;" onchange="loadProducts()">
+                <option value="All">Tất cả trạng thái</option>
+                <option value="1">🟢 Đang hiển thị</option>
+                <option value="0">🔴 Đã ẩn</option>
+              </select>
+            </div>
           </div>
 
           <table style="width: 100%; overflow-x: auto; display: block;">
@@ -1051,11 +1058,12 @@
                 <th>Danh mục</th>
                 <th>Giá bán</th>
                 <th>Tồn kho</th>
-                <th id="th-actions" style="width:130px;">Thao tác</th>
+                <th style="width:100px;">Trạng thái</th>
+                <th id="th-actions" style="width:170px;">Thao tác</th>
               </tr>
             </thead>
             <tbody id="products-tbody" style="display: table; width: 100%;">
-              <tr><td colspan="8" style="text-align:center;">Đang tải...</td></tr>
+              <tr><td colspan="9" style="text-align:center;">Đang tải...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2646,13 +2654,15 @@
       }
     }
 
-    // Fetch and display active products list
+    // Fetch and display products list (including hidden products for Admin)
     async function loadProducts() {
-      const search = document.getElementById('prod-search').value.trim();
-      const category = document.getElementById('prod-category-filter').value;
+      const search = document.getElementById('prod-search')?.value.trim() || '';
+      const category = document.getElementById('prod-category-filter')?.value || 'All';
+      const statusFilter = document.getElementById('prod-status-filter')?.value || 'All';
       
-      let url = `/api/products?search=${encodeURIComponent(search)}`;
+      let url = `/api/products?include_hidden=true&search=${encodeURIComponent(search)}`;
       if (category !== 'All') url += `&category=${encodeURIComponent(category)}`;
+      if (statusFilter !== 'All') url += `&status=${encodeURIComponent(statusFilter)}`;
 
       try {
         const res = await fetch(url);
@@ -2668,18 +2678,21 @@
         }
 
         if (products.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Không có sản phẩm nào phù hợp.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Không có sản phẩm nào phù hợp.</td></tr>';
           return;
         }
 
         products.forEach(p => {
           const imgUrl = p.duong_dan_anh ? (p.duong_dan_anh.startsWith('http') ? p.duong_dan_anh : `/${p.duong_dan_anh}`) : '/placeholder.png';
+          const isVisible = p.trang_thai === 1 || p.trang_thai === '1' || p.trang_thai === true;
           
           let actionsTd = '';
           if (hasProductWriteAccess) {
+            const toggleBtnText = isVisible ? 'Ẩn' : 'Hiện';
             actionsTd = `
-              <td style="width:130px;">
+              <td style="width:170px;">
                 <button class="btn-sm btn-edit" onclick="openProductModal(${p.id})">Sửa</button>
+                <button class="btn-sm" style="font-size:0.75rem; padding:0.25rem 0.5rem; background:${isVisible ? '#f3f4f6' : '#2563eb'}; color:${isVisible ? '#374151' : '#fff'}; border:1px solid ${isVisible ? '#d1d5db' : '#2563eb'}; border-radius:4px; margin-right:4px; cursor:pointer;" onclick="quickToggleProductStatus(${p.id}, ${p.trang_thai})" title="${isVisible ? 'Ẩn sản phẩm khỏi cửa hàng' : 'Hiển thị lại sản phẩm trên cửa hàng'}">${toggleBtnText}</button>
                 ${isAdmin ? `<button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})">Xóa</button>` : ''}
               </td>
             `;
@@ -2690,8 +2703,12 @@
           if (p.is_ban_chay) tagsBadges += '<span style="background:#ffedd5; color:#c2410c; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:700; margin-right:4px;">🔥 Bán chạy</span>';
           if (p.is_flash_sale) tagsBadges += '<span style="background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:700;">⚡ Flash Sale</span>';
 
+          const statusBadge = isVisible
+            ? '<span class="status-badge status-hoan-thanh" style="font-size:0.75rem;">🟢 Hiển thị</span>'
+            : '<span class="status-badge status-huy" style="font-size:0.75rem;">🔴 Đã ẩn</span>';
+
           tbody.innerHTML += `
-            <tr style="display: table-row;">
+            <tr style="display: table-row; ${!isVisible ? 'background-color: #fef2f2;' : ''}">
               <td style="width:40px; text-align:center;"><input type="checkbox" class="product-checkbox" value="${p.id}" onchange="updateSelectedProductsUI()" style="width:16px; height:16px; cursor:pointer;"></td>
               <td style="width:60px;">#${p.id}</td>
               <td style="width:80px;"><img src="${imgUrl}" alt="${p.ten_san_pham}" style="width:50px; height:50px; object-fit:contain; border:1px solid #e5e7eb; border-radius:4px;"></td>
@@ -2702,12 +2719,39 @@
               <td>${p.ten_danh_muc || 'Không phân loại'}</td>
               <td style="color:var(--red); font-weight:700;">${(parseFloat(p.gia) || 0).toLocaleString('vi-VN')}₫</td>
               <td>${p.so_luong}</td>
+              <td style="width:100px;">${statusBadge}</td>
               ${actionsTd}
             </tr>
           `;
         });
       } catch (e) {
         console.error(e);
+      }
+    }
+
+    async function quickToggleProductStatus(id, currentStatus) {
+      const nextStatus = (currentStatus === 1 || currentStatus === '1' || currentStatus === true) ? 0 : 1;
+      const actionName = nextStatus === 1 ? 'hiển thị lại' : 'ẩn';
+      if (!confirm(`Bạn có chắc chắn muốn ${actionName} sản phẩm #${id} không?`)) return;
+
+      try {
+        const res = await fetch(`/api/products/${id}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ trang_thai: nextStatus })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          loadProducts();
+        } else {
+          alert('❌ ' + (data.error || 'Lỗi khi cập nhật trạng thái sản phẩm'));
+        }
+      } catch (e) {
+        console.error(e);
+        alert('❌ Lỗi kết nối máy chủ');
       }
     }
 
@@ -2757,7 +2801,7 @@
     // Modal control
     async function loadProductDataToForm(id) {
       try {
-        const res = await fetch(`/api/products/${id}`);
+        const res = await fetch(`/api/products/${id}?include_hidden=true`);
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.error || 'Không tìm thấy sản phẩm');
