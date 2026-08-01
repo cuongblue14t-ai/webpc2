@@ -265,7 +265,7 @@ router.patch('/:id/status', verifyToken, verifyAdminOrManager, async (req, res) 
       [productId]
     );
     if (prodRows.length === 0) {
-      connection.release();
+      await connection.rollback();
       return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
     }
     const oldProd = prodRows[0];
@@ -513,7 +513,6 @@ router.put(
       );
       if (oldRows.length === 0) {
         await connection.rollback();
-        connection.release();
         return res.status(404).json({ error: 'Product not found or already deleted' });
       }
       const oldProd = oldRows[0];
@@ -670,7 +669,7 @@ router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
       [productId]
     );
     if (prodRows.length === 0) {
-      connection.release();
+      await connection.rollback();
       return res.status(404).json({ error: 'Product not found' });
     }
     const productName = prodRows[0].ten_san_pham;
@@ -683,7 +682,6 @@ router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
 
     if (result.affectedRows === 0) {
       await connection.rollback();
-      connection.release();
       return res.status(404).json({ error: 'Product not found' });
     }
 
@@ -723,7 +721,7 @@ router.post('/batch-delete', verifyToken, verifyAdmin, async (req, res) => {
     );
 
     if (prodRows.length === 0) {
-      connection.release();
+      await connection.rollback();
       return res.status(404).json({ error: 'Không tìm thấy sản phẩm nào phù hợp để xóa' });
     }
 
