@@ -4183,33 +4183,6 @@
       return params.length > 0 ? '?' + params.join('&') : '';
     }
 
-    function navigateToKpiDetail(type) {
-      if (type === 'sold') {
-        const topSection = document.getElementById('top-products-tbody');
-        if (topSection) {
-          topSection.scrollIntoView({ behavior: 'smooth' });
-        }
-        return;
-      }
-
-      if (typeof showView === 'function') {
-        showView('orders-view');
-      }
-
-      const orderStatusFilter = document.getElementById('order-status-filter');
-      if (orderStatusFilter) {
-        if (type === 'revenue' || type === 'completed') {
-          orderStatusFilter.value = 'Hoàn thành';
-        } else if (type === 'orders') {
-          orderStatusFilter.value = 'All';
-        }
-        if (typeof loadOrders === 'function') {
-          loadOrders();
-        }
-      }
-    }
-    window.navigateToKpiDetail = navigateToKpiDetail;
-
     async function loadStats() {
       const queryParams = getStatsQueryParams();
       const btnLoad = document.getElementById('btn-load-stats');
