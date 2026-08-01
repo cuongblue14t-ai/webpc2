@@ -645,6 +645,10 @@
               <button id="btn-delete-selected-orders" type="button" class="btn-sm admin-only-btn" style="background:#ef4444; color:#fff; padding:0.6rem 1.2rem; font-weight:700; border-radius:6px; cursor:pointer; border:none; display:none;" onclick="deleteSelectedOrders()">🗑️ Xóa các mục đã chọn (<span id="selected-orders-count">0</span>)</button>
               <button id="btn-delete-all-orders" type="button" class="btn-sm admin-only-btn" style="background:#dc2626; color:#fff; padding:0.6rem 1.2rem; font-weight:700; border-radius:6px; cursor:pointer; border:none;" onclick="deleteAllOrders()">🗑️ Xóa tất cả đơn hàng</button>
             </div>
+          <!-- Active Time Filter Banner -->
+          <div id="active-time-filter-banner" style="display:none; justify-content:space-between; align-items:center; margin-bottom:1rem; background:#fff7ed; padding:0.8rem 1.2rem; border-radius:8px; border:1px solid #fed7aa; color:#c2410c; font-weight:700; font-size:0.9rem;">
+            <span id="active-time-filter-text">🕒 Đang lọc đơn hàng theo mốc thời gian</span>
+            <button type="button" onclick="clearOrdersTimeFilter()" style="background:#ea580c; color:#fff; border:none; padding:0.3rem 0.8rem; border-radius:6px; font-weight:700; font-size:0.8rem; cursor:pointer;">❌ Xóa lọc thời gian</button>
           </div>
 
           <!-- Order Status Filter Bar -->
@@ -1543,20 +1547,24 @@
     }
 
     function navigateToKpiDetail(type) {
+      const dateRange = getActiveDateRangeFromQueryParams();
+      let start = dateRange ? dateRange.startDate : null;
+      let end = dateRange ? dateRange.endDate : null;
+
       if (type === 'revenue' || type === 'completed') {
         showView('orders-view');
         const filterSelect = document.getElementById('order-status-filter');
         if (filterSelect) {
           filterSelect.value = 'Hoàn thành';
         }
-        filterOrdersTableByStatus('Hoàn thành', true);
+        loadOrders(start, end);
       } else if (type === 'orders') {
         showView('orders-view');
         const filterSelect = document.getElementById('order-status-filter');
         if (filterSelect) {
           filterSelect.value = 'all';
         }
-        filterOrdersTableByStatus('all', true);
+        loadOrders(start, end);
       } else if (type === 'sold') {
         openSoldProductsModal();
       }
@@ -1664,11 +1672,21 @@
     async function openSoldProductsModal() {
       const modal = document.getElementById('sold-products-modal');
       const tbody = document.getElementById('sold-products-tbody');
+      const titleEl = modal ? modal.querySelector('h3') : null;
       if (!modal || !tbody) return;
 
       modal.style.display = 'flex';
       modal.classList.add('active', 'show');
       tbody.innerHTML = '<tr style="display:table-row;"><td colspan="6" style="text-align:center; padding:2rem; color:#6b7280;">Đang tải danh sách sản phẩm đã bán...</td></tr>';
+
+      const dateRange = getActiveDateRangeFromQueryParams();
+      if (titleEl) {
+        if (dateRange && dateRange.startDate && dateRange.endDate) {
+          titleEl.textContent = `📦 Danh sách Sản phẩm đã bán (Từ ${dateRange.startDate} đến ${dateRange.endDate})`;
+        } else {
+          titleEl.textContent = `📦 Danh sách Sản phẩm đã bán (Tất cả thời gian)`;
+        }
+      }
 
       try {
         const queryParams = typeof getStatsQueryParams === 'function' ? getStatsQueryParams() : '';
@@ -1748,9 +1766,21 @@
     let currentOrdersList = [];
 
     // 4. Orders CRUD
-    async function loadOrders() {
+    async function loadOrders(startDate = null, endDate = null) {
       try {
-        const res = await fetch('/api/orders', { headers: authHeaders });
+        let url = '/api/orders';
+        let queryParams = [];
+
+        if (startDate && endDate) {
+          queryParams.push(`startDate=${encodeURIComponent(startDate)}`);
+          queryParams.push(`endDate=${encodeURIComponent(endDate)}`);
+        }
+
+        if (queryParams.length > 0) {
+          url += '?' + queryParams.join('&');
+        }
+
+        const res = await fetch(url, { headers: authHeaders });
         if(!res.ok) {
           if(res.status === 401 || res.status === 403) window.location.href = 'login.html';
           throw new Error('Lỗi lấy dữ liệu');
@@ -1758,6 +1788,19 @@
         const orders = await res.json();
         currentOrdersList = orders;
         
+        const bannerEl = document.getElementById('active-time-filter-banner');
+        const bannerTextEl = document.getElementById('active-time-filter-text');
+        if (bannerEl) {
+          if (startDate && endDate) {
+            bannerEl.style.display = 'flex';
+            if (bannerTextEl) {
+              bannerTextEl.innerHTML = `🕒 Đang lọc đơn hàng từ <strong>${startDate}</strong> đến <strong>${endDate}</strong>`;
+            }
+          } else {
+            bannerEl.style.display = 'none';
+          }
+        }
+
         // Reset select all checkbox & selection state
         const masterCb = document.getElementById('select-all-orders');
         if (masterCb) masterCb.checked = false;
@@ -1770,6 +1813,13 @@
         console.error('Error loading orders:', err);
       }
     }
+
+    function clearOrdersTimeFilter() {
+      const bannerEl = document.getElementById('active-time-filter-banner');
+      if (bannerEl) bannerEl.style.display = 'none';
+      loadOrders();
+    }
+    window.clearOrdersTimeFilter = clearOrdersTimeFilter;
 
     // Orders Batch Selection & Deletion Logic
     function toggleSelectAllOrders(masterCb) {

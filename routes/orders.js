@@ -248,10 +248,32 @@ router.get('/stats/sold-products', verifyToken, requireRole('Admin', 'Manager'),
   }
 });
 
-// GET all orders (Admin & Manager)
+// GET all orders (Admin & Manager) with optional date & status filtering
 router.get('/', verifyToken, requireRole('Admin', 'Manager'), async (req, res) => {
   try {
-    const [orders] = await db.query('SELECT * FROM don_hang ORDER BY ngay_dat DESC');
+    let whereClauses = [];
+    let params = [];
+
+    if (req.query.startDate) {
+      let start = req.query.startDate;
+      if (!start.includes(' ')) start += ' 00:00:00';
+      whereClauses.push('ngay_dat >= ?');
+      params.push(start);
+    }
+    if (req.query.endDate) {
+      let end = req.query.endDate;
+      if (!end.includes(' ')) end += ' 23:59:59';
+      whereClauses.push('ngay_dat <= ?');
+      params.push(end);
+    }
+    if (req.query.status && req.query.status !== 'all' && req.query.status !== 'All') {
+      whereClauses.push('trang_thai_don_hang = ?');
+      params.push(req.query.status);
+    }
+
+    const whereStr = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
+    const [orders] = await db.query(`SELECT * FROM don_hang ${whereStr} ORDER BY ngay_dat DESC`, params);
+
     res.json(orders.map(o => ({
       id: o.id,
       ho_ten: o.ten_khach_hang,
