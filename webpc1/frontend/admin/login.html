@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login - WebPC</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap');
+    *, body, button, input, select, textarea { font-family: 'Arimo', Arial, Helvetica, sans-serif !important; }
+    body { background: #f3f4f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .login-card { background: #fff; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+    h2 { margin-bottom: 1.5rem; color: #111827; }
+    .form-group { margin-bottom: 1.2rem; text-align: left; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151; }
+    .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+    .form-group input:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 2px rgba(249,115,22,0.2); }
+    .btn { background: #f97316; color: #fff; border: none; padding: 0.8rem; width: 100%; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #ea580c; }
+    #error-msg { color: #dc2626; margin-top: 1rem; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h2>WebPC Admin</h2>
+    <form id="login-form">
+      <div class="form-group">
+        <label>Tên đăng nhập</label>
+        <input type="text" id="username" required>
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="submit" class="btn">ĐĂNG NHẬP</button>
+      <div id="error-msg"></div>
+    </form>
+  </div>
+  <script>
+    // Kiểm tra nếu đã login với tài khoản Admin/Manager thì chuyển về dashboard
+    const existingToken = localStorage.getItem('adminToken');
+    const existingUser = localStorage.getItem('adminUser');
+    if (existingToken && existingUser) {
+      try {
+        const u = JSON.parse(existingUser);
+        if (u.role === 'Admin' || u.role === 'Manager') {
+          window.location.href = 'index.html';
+        } else {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+        }
+      } catch(e) {}
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      const errEl = document.getElementById('error-msg');
+      errEl.textContent = '';
+      
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p, clientType: 'Admin' })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          if (data.user && data.user.role === 'Customer') {
+            errEl.textContent = '⚠️ Tài khoản Khách hàng không có quyền đăng nhập vào Trang quản trị!';
+            return;
+          }
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
+          window.location.href = 'index.html';
+        } else {
+          errEl.textContent = data.error || 'Đăng nhập không thành công!';
+        }
+      } catch (err) {
+        errEl.textContent = 'Lỗi kết nối server.';
+      }
+    });
+  </script>
+</body>
+</html>

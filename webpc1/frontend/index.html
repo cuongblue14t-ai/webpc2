@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nam Nguyễn PC & Workstation - Trang Chủ</title>
+  <link rel="stylesheet" href="style.css?v=5" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="Nam Nguyễn PC & Workstation Logo" class="logo-img">
+        <div class="company-brand-text">
+          <span class="company-title">NAM NGUYỄN</span>
+          <span class="company-sub">PC & WORKSTATION</span>
+        </div>
+      </a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="categories.html">Danh mục</a></li>
+        <li><a href="products.html">Sản phẩm</a></li>
+        <li><a href="promotions.html" class="promo-link-highlight">🔥 Khuyến Mãi</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+        <li><a href="cart.html" class="cart-link">🛒 Giỏ hàng (<span id="cart-count">0</span>)</a></li>
+    </ul>
+    </nav>
+    <div class="search-wrap">
+      <input type="text" placeholder="Tìm kiếm sản phẩm..." id="search-input" />
+      <button id="search-btn">🔍</button>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  </header>
+
+  <!-- Hero Banner Slider (1920x600) -->
+  <section class="hero-slider" id="hero-slider">
+    <div class="slider-track" id="slider-track">
+      <!-- Injected via JS -->
+    </div>
+    <button class="slider-btn slider-prev" id="slider-prev">❮</button>
+    <button class="slider-btn slider-next" id="slider-next">❯</button>
+    <div class="slider-dots" id="slider-dots">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <!-- Flash Sale Section -->
+  <section class="flash-sale-section">
+    <div class="flash-sale-header">
+      <div class="flash-sale-title">
+        <span class="flash-icon">⚡</span>
+        <span class="flash-text">FLASH SALE</span>
+      </div>
+      <div class="flash-sale-timer">
+        <span class="timer-label">KẾT THÚC SAU:</span>
+        <div class="timer-boxes">
+          <span id="fs-hours">05</span>:<span id="fs-minutes">24</span>:<span id="fs-seconds">18</span>
+        </div>
+      </div>
+    </div>
+    <div class="product-grid" id="flash-sale-grid"></div>
+  </section>
+
+  <!-- Introduction & CTA -->
+  <section class="intro">
+    <h2>Về Nam Nguyễn PC & Workstation</h2>
+    <p>Chúng tôi cung cấp các sản phẩm công nghệ tiên tiến, hỗ trợ khách hàng chọn mua linh kiện phù hợp, bảo hành uy tín.</p>
+    <button class="cta-btn" onclick="window.location='about.html'">Tìm hiểu thêm</button>
+  </section>
+
+  <!-- Categories Quick Links -->
+  <section class="categories-section">
+    <h2 class="section-title">Danh mục sản phẩm</h2>
+    <div class="category-grid" id="category-grid"></div>
+  </section>
+
+  <!-- Featured Products -->
+  <section class="featured-section">
+    <h2 class="section-title">🌟 Sản phẩm nổi bật</h2>
+    <div class="product-grid" id="featured-grid"></div>
+  </section>
+
+  <!-- Best Seller Products -->
+  <section class="featured-section" style="margin-top:2rem;">
+    <h2 class="section-title">🔥 Sản phẩm bán chạy</h2>
+    <div class="product-grid" id="best-seller-grid"></div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>© 2026 NAM NGUYỄN PC & WORKSTATION. All rights reserved.</p>
+  </footer>
+
+  <script src="cart.js?v=4"></script>
+  <script src="product-card.js?v=4"></script>
+<script src="zalo-qr-modal.js"></script>
+<script src="auth-modal.js"></script>
+
+  <script>
+    // Global header search (Redirect to search.html with query)
+    function executeHeaderSearch() {
+      const term = document.getElementById('search-input').value.trim();
+      if (term) {
+        window.location.href = 'products.html?search=' + encodeURIComponent(term);
+      }
+    }
+    const searchBtn = document.getElementById('search-btn');
+    const searchInput = document.getElementById('search-input');
+    if (searchBtn) searchBtn.addEventListener('click', executeHeaderSearch);
+    if (searchInput) searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') executeHeaderSearch();
+    });
+
+    // ── Load Banners into 1920x600 Slider ──
+    async function loadBanners() {
+      try {
+        const res = await fetch('/api/banners');
+        let banners = [];
+        try { banners = await res.json(); } catch(e) {}
+        
+        const track = document.getElementById('slider-track');
+        const dotsContainer = document.getElementById('slider-dots');
+        const prevBtn = document.getElementById('slider-prev');
+        const nextBtn = document.getElementById('slider-next');
+        
+        if (!track) return;
+
+        // Đồng bộ chính xác danh sách banner từ CSDL/Admin (nếu API rỗng mới dùng banner mặc định)
+        let activeBanners = Array.isArray(banners) && banners.length > 0 ? [...banners] : [
+          {
+            tieu_de: 'Nam Nguyễn PC & Workstation - Giới Thiệu Doanh Nghiệp & Giải Pháp Công Nghệ',
+            hinh_anh: 'banner_nam_nguyen_1.png',
+            lien_ket: 'about.html'
+          }
+        ];
+
+        track.innerHTML = activeBanners.map((b, i) => {
+          const imgUrl = b.hinh_anh ? (b.hinh_anh.startsWith('http') ? b.hinh_anh : (b.hinh_anh.startsWith('/') ? b.hinh_anh : `/${b.hinh_anh}`)) : 'banner2.png';
+          let linkUrl = b.lien_ket;
+          
+          if (!linkUrl || linkUrl === '#') {
+            linkUrl = 'products.html';
+          }
+
+          return `
+            <div class="slide ${i === 0 ? 'active' : ''}">
+              <a href="${linkUrl}"><img src="${imgUrl}" alt="${b.tieu_de || 'Banner'}" referrerpolicy="no-referrer" style="cursor:pointer;"></a>
+            </div>
+          `;
+        }).join('');
+
+        dotsContainer.innerHTML = activeBanners.map((b, i) => `<span class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`).join('');
+        
+        const slides = document.querySelectorAll('.hero-slider .slide');
+        const dots = document.querySelectorAll('.slider-dots .dot');
+        let current = 0;
+        let timer = null;
+
+        function goTo(idx) {
+          slides[current].classList.remove('active');
+          dots[current].classList.remove('active');
+          current = (idx + slides.length) % slides.length;
+          slides[current].classList.add('active');
+          dots[current].classList.add('active');
+        }
+
+        function next() { goTo(current + 1); }
+        function prev() { goTo(current - 1); }
+        function startAuto() { timer = setInterval(next, 6000); }
+        function resetAuto() { clearInterval(timer); startAuto(); }
+
+        nextBtn.addEventListener('click', () => { next(); resetAuto(); });
+        prevBtn.addEventListener('click', () => { prev(); resetAuto(); });
+        dots.forEach(d => d.addEventListener('click', () => { goTo(+d.dataset.index); resetAuto(); }));
+        
+        startAuto();
+      } catch(e) { console.error('Banners load error', e); }
+    }
+
+    // ── Load categories ──
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        const cats = await res.json();
+        const grid = document.getElementById('category-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        const defaultCatImages = {
+          'CPU SEVER': 'cat_cpu_server.png',
+          'CPU PC': 'cat_cpu_pc.png',
+          'MAINBOARD PC': 'cat_mainboard_pc.png',
+          'MAINBOARD SEVER': 'cat_mainboard_server.png',
+          'RAM PC': 'cat_ram_pc.png',
+          'RAM SEVER': 'cat_ram_server.png',
+          'CARD ĐỒ HỌA': 'cat_gpu.png',
+          'VỎ MÁY TÍNH': 'cat_case.png',
+          'MÀN HÌNH MÁY TÍNH': 'cat_monitor.png',
+          'NGUỒN MÁY TÍNH': 'cat_psu.png',
+          'Ổ CỨNG SSD': 'cat_ssd.png',
+          'TẢN NHIỆT CPU': 'cat_cooler.png'
+        };
+
+        cats.forEach(cat => {
+          const card = document.createElement('div');
+          card.className = 'category-card';
+          const imgSrc = defaultCatImages[cat.ten_danh_muc] || (cat.hinh_anh && cat.hinh_anh.startsWith('http') ? cat.hinh_anh : 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400');
+            
+          const imgHTML = `<div class="cat-img-wrap"><img src="${imgSrc}" alt="${cat.ten_danh_muc}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400';"></div>`;
+          const countBadge = cat.so_luong_san_pham !== undefined ? `<span style="font-size:0.75rem; color:#f97316; font-weight:700; margin-left:4px; background:#fff7ed; padding:2px 6px; border-radius:10px; border:1px solid #ffedd5;">${cat.so_luong_san_pham} SP</span>` : '';
+          card.innerHTML = `<a href="categories.html?cat=${cat.id}">${imgHTML}<span class="cat-title">${cat.ten_danh_muc} ${countBadge}</span></a>`;
+          grid.appendChild(card);
+        });
+      } catch (e) { console.error('Categories load error', e); }
+    }
+
+    // ── Load Flash Sale Products ──
+    async function loadFlashSale() {
+      try {
+        const res = await fetch('/api/products?tag=flash_sale');
+        const products = await res.json();
+        const grid = document.getElementById('flash-sale-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        if (!Array.isArray(products) || products.length === 0) {
+          grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#6b7280; padding:1.5rem; font-style:italic;">Hiện chưa có sản phẩm Flash Sale nào.</p>';
+          return;
+        }
+        products.slice(0, 4).forEach(p => {
+          grid.appendChild(buildProductCard(p));
+        });
+      } catch (e) { console.error('Flash sale load error', e); }
+    }
+
+    // ── Load Featured Products ──
+    async function loadFeatured() {
+      try {
+        const res = await fetch('/api/products?tag=noi_bat');
+        const products = await res.json();
+        const grid = document.getElementById('featured-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        if (!Array.isArray(products) || products.length === 0) {
+          grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#6b7280; padding:1.5rem; font-style:italic;">Chưa có sản phẩm nổi bật nào được chọn.</p>';
+          return;
+        }
+        products.slice(0, 8).forEach(p => {
+          grid.appendChild(buildProductCard(p));
+        });
+      } catch (e) { console.error('Featured load error', e); }
+    }
+
+    // ── Load Best Seller Products ──
+    async function loadBestSellers() {
+      try {
+        const res = await fetch('/api/products?tag=ban_chay');
+        const products = await res.json();
+        const grid = document.getElementById('best-seller-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        if (!Array.isArray(products) || products.length === 0) {
+          grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#6b7280; padding:1.5rem; font-style:italic;">Chưa có sản phẩm bán chạy nào được chọn.</p>';
+          return;
+        }
+        products.slice(0, 8).forEach(p => {
+          grid.appendChild(buildProductCard(p));
+        });
+      } catch (e) { console.error('Best sellers load error', e); }
+    }
+
+    // ── Flash Sale Countdown Timer ──
+    function initFlashSaleTimer() {
+      let totalSeconds = 5 * 3600 + 24 * 60 + 18; // 05h 24m 18s
+      const hEl = document.getElementById('fs-hours');
+      const mEl = document.getElementById('fs-minutes');
+      const sEl = document.getElementById('fs-seconds');
+
+      setInterval(() => {
+        if (totalSeconds <= 0) {
+          totalSeconds = 8 * 3600; // Reset to 8 hours
+        }
+        totalSeconds--;
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        if (hEl) hEl.textContent = String(h).padStart(2, '0');
+        if (mEl) mEl.textContent = String(m).padStart(2, '0');
+        if (sEl) sEl.textContent = String(s).padStart(2, '0');
+      }, 1000);
+    }
+
+    // Initialise
+    loadBanners();
+    loadCategories();
+    loadFlashSale();
+    loadFeatured();
+    loadBestSellers();
+    initFlashSaleTimer();
+  </script>
+</body>
+</html>

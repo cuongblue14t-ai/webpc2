@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Build PC Đỉnh Cao - Ưu Đãi Đến 30% | Nam Nguyễn PC & Workstation</title>
+  <link rel="stylesheet" href="style.css?v=7" />
+</head>
+<body class="build-pc-page">
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="Nam Nguyễn PC & Workstation Logo" class="logo-img">
+        <div class="company-brand-text">
+          <span class="company-title">NAM NGUYỄN</span>
+          <span class="company-sub">PC & WORKSTATION</span>
+        </div>
+      </a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="categories.html">Danh mục</a></li>
+        <li><a href="products.html">Sản phẩm</a></li>
+        <li><a href="promotions.html" class="promo-link-highlight">🔥 Khuyến Mãi</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+        <li><a href="cart.html" class="cart-link">🛒 Giỏ hàng (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+    <div class="search-wrap">
+      <input type="text" placeholder="Tìm kiếm sản phẩm..." id="search-input" />
+      <button id="search-btn">🔍</button>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  </header>
+
+  <!-- Hero Section matching Build PC Banner -->
+  <section class="build-pc-hero">
+    <div class="build-pc-hero-overlay"></div>
+    <div class="build-pc-hero-content">
+      <div class="build-pc-badges">
+        <span class="badge-tag orange">BUILD PC CHUYÊN NGHIỆP</span>
+        <span class="badge-tag red">ƯU ĐÃI LÊN ĐẾN 30%</span>
+      </div>
+      <h1 class="build-pc-title">BUILD PC ĐỈNH CAO</h1>
+      <p class="build-pc-subtitle">HIỆU NĂNG – TRẢI NGHIỆM – ĐẲNG CẤP</p>
+      
+      <div class="build-pc-features-row">
+        <div class="feat-item"><span class="feat-icon">⚡</span> <span>Cấu Hình Tối Ưu</span></div>
+        <div class="feat-item"><span class="feat-icon">🛡️</span> <span>Bảo Hành 36 Tháng</span></div>
+        <div class="feat-item"><span class="feat-icon">🚚</span> <span>Giao Hàng Toàn Quốc</span></div>
+        <div class="feat-item"><span class="feat-icon">💳</span> <span>Trả Góp 0% Lãi Suất</span></div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>© 2026 NAM NGUYỄN PC & WORKSTATION. All rights reserved.</p>
+  </footer>
+
+  <script src="cart.js?v=4"></script>
+  <script src="product-card.js?v=4"></script>
+  <script src="zalo-qr-modal.js"></script>
+  <script src="auth-modal.js"></script>
+
+  <script>
+    // Header search
+    function executeHeaderSearch() {
+      const term = document.getElementById('search-input').value.trim();
+      if (term) {
+        window.location.href = 'products.html?search=' + encodeURIComponent(term);
+      }
+    }
+    const searchBtn = document.getElementById('search-btn');
+    const searchInput = document.getElementById('search-input');
+    if (searchBtn) searchBtn.addEventListener('click', executeHeaderSearch);
+    if (searchInput) searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') executeHeaderSearch();
+    });
+
+  </script>
+</body>
+</html>
