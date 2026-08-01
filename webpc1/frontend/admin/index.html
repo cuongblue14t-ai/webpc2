@@ -831,9 +831,9 @@
                 </select>
               </div>
               <div id="stats-custom-dates" style="display:none; align-items:center; gap:0.5rem;">
-                <input type="date" id="stats-start-date" style="padding:0.45rem; border:1px solid #d1d5db; border-radius:6px;">
+                <input type="date" id="stats-start-date" style="padding:0.45rem; border:1px solid #d1d5db; border-radius:6px;" onchange="loadStats()">
                 <span>đến</span>
-                <input type="date" id="stats-end-date" style="padding:0.45rem; border:1px solid #d1d5db; border-radius:6px;">
+                <input type="date" id="stats-end-date" style="padding:0.45rem; border:1px solid #d1d5db; border-radius:6px;" onchange="loadStats()">
               </div>
               <button id="btn-load-stats" class="btn-sm" style="background:var(--orange); color:#fff; padding:0.5rem 1rem; border-radius:6px; border:none; font-weight:700; cursor:pointer;" onclick="loadStats()">Xem báo cáo</button>
               <button id="btn-export-stats" class="btn-sm" style="background:#16a34a; color:#fff; padding:0.5rem 1rem; border-radius:6px; border:none; font-weight:700; cursor:pointer;" onclick="exportStatsCSV()">📥 Xuất báo cáo CSV</button>
@@ -1532,45 +1532,72 @@
     window.showView = showView;
 
     // ── KPI Card Navigation & Sold Products Modal Handlers ──
+    function getActiveDateRangeFromQueryParams() {
+      if (typeof getStatsQueryParams !== 'function') return null;
+      const paramsStr = getStatsQueryParams();
+      if (!paramsStr) return null;
+      const searchParams = new URLSearchParams(paramsStr);
+      const startDate = searchParams.get('startDate');
+      const endDate = searchParams.get('endDate');
+      return (startDate && endDate) ? { startDate, endDate } : null;
+    }
+
     function navigateToKpiDetail(type) {
       if (type === 'revenue' || type === 'completed') {
         showView('orders-view');
         const filterSelect = document.getElementById('order-status-filter');
         if (filterSelect) {
           filterSelect.value = 'Hoàn thành';
-          filterOrdersTableByStatus('Hoàn thành');
         }
+        filterOrdersTableByStatus('Hoàn thành', true);
       } else if (type === 'orders') {
         showView('orders-view');
         const filterSelect = document.getElementById('order-status-filter');
         if (filterSelect) {
           filterSelect.value = 'all';
-          filterOrdersTableByStatus('all');
         }
+        filterOrdersTableByStatus('all', true);
       } else if (type === 'sold') {
         openSoldProductsModal();
       }
     }
     window.navigateToKpiDetail = navigateToKpiDetail;
 
-    function filterOrdersTableByStatus(status) {
+    function filterOrdersTableByStatus(status, applyDateFilter = false) {
       const tbody = document.getElementById('orders-tbody');
       const summaryEl = document.getElementById('order-filter-summary');
       if (!tbody) return;
 
-      let filtered = currentOrdersList;
+      let filtered = currentOrdersList || [];
+
+      const dateRange = applyDateFilter ? getActiveDateRangeFromQueryParams() : null;
+      if (dateRange && dateRange.startDate && dateRange.endDate) {
+        const startMs = new Date(dateRange.startDate + 'T00:00:00').getTime();
+        const endMs = new Date(dateRange.endDate + 'T23:59:59').getTime();
+
+        filtered = filtered.filter(o => {
+          if (!o.ngay_dat) return false;
+          const orderMs = new Date(o.ngay_dat).getTime();
+          return orderMs >= startMs && orderMs <= endMs;
+        });
+      }
+
       if (status && status !== 'all') {
-        filtered = currentOrdersList.filter(o => (o.trang_thai || 'Mới') === status);
+        filtered = filtered.filter(o => (o.trang_thai || 'Mới') === status);
       }
 
       if (summaryEl) {
+        let dateText = (dateRange && dateRange.startDate && dateRange.endDate)
+          ? ` (Lọc thời gian từ ${dateRange.startDate} đến ${dateRange.endDate})`
+          : '';
+
         if (status === 'Hoàn thành') {
           const totalRev = filtered.reduce((sum, o) => sum + (parseFloat(o.tong_tien) || 0), 0);
-          summaryEl.innerHTML = `✅ Tất cả ${filtered.length} đơn hoàn thành — Tổng doanh thu: <span style="color:#16a34a; font-size:1rem;">${totalRev.toLocaleString('vi-VN')}₫</span>`;
+          summaryEl.innerHTML = `✅ Hiển thị <b>${filtered.length}</b> đơn hoàn thành${dateText} — Tổng doanh thu: <span style="color:#16a34a; font-weight:700;">${totalRev.toLocaleString('vi-VN')}₫</span>`;
         } else if (status === 'all') {
-          summaryEl.textContent = `📦 Tổng cộng: ${filtered.length} đơn hàng phát sinh từ trước tới giờ`;
+          summaryEl.innerHTML = `📦 Hiển thị <b>${filtered.length}</b> đơn hàng phát sinh${dateText}`;
         } else {
-          summaryEl.textContent = `Hiển thị ${filtered.length} đơn hàng (${status})`;
+          summaryEl.innerHTML = `Hiển thị <b>${filtered.length}</b> đơn hàng (${status})${dateText}`;
         }
       }
 
@@ -1644,7 +1671,8 @@
       tbody.innerHTML = '<tr style="display:table-row;"><td colspan="6" style="text-align:center; padding:2rem; color:#6b7280;">Đang tải danh sách sản phẩm đã bán...</td></tr>';
 
       try {
-        const res = await fetch('/api/orders/stats/sold-products', { headers: authHeaders });
+        const queryParams = typeof getStatsQueryParams === 'function' ? getStatsQueryParams() : '';
+        const res = await fetch(`/api/orders/stats/sold-products${queryParams}`, { headers: authHeaders });
         if (!res.ok) throw new Error('Không thể lấy thống kê sản phẩm');
         const soldItems = await res.json();
 
@@ -4054,6 +4082,14 @@
     let statusChartInstance = null;
     let categoryChartInstance = null;
 
+    function formatLocalDate(d) {
+      if (!d || isNaN(d.getTime())) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
     function handleStatsTimeChange(val) {
       const customBox = document.getElementById('stats-custom-dates');
       if (customBox) {
@@ -4071,18 +4107,18 @@
       const now = new Date();
       if (val === '7days') {
         const d = new Date();
-        d.setDate(d.getDate() - 7);
-        startDate = d.toISOString().split('T')[0];
-        endDate = now.toISOString().split('T')[0];
+        d.setDate(d.getDate() - 6);
+        startDate = formatLocalDate(d);
+        endDate = formatLocalDate(now);
       } else if (val === '30days') {
         const d = new Date();
-        d.setDate(d.getDate() - 30);
-        startDate = d.toISOString().split('T')[0];
-        endDate = now.toISOString().split('T')[0];
+        d.setDate(d.getDate() - 29);
+        startDate = formatLocalDate(d);
+        endDate = formatLocalDate(now);
       } else if (val === 'thismonth') {
         const d = new Date(now.getFullYear(), now.getMonth(), 1);
-        startDate = d.toISOString().split('T')[0];
-        endDate = now.toISOString().split('T')[0];
+        startDate = formatLocalDate(d);
+        endDate = formatLocalDate(now);
       } else if (val === 'custom') {
         const startInput = document.getElementById('stats-start-date');
         const endInput = document.getElementById('stats-end-date');
@@ -4096,6 +4132,33 @@
 
       return params.length > 0 ? '?' + params.join('&') : '';
     }
+
+    function navigateToKpiDetail(type) {
+      if (type === 'sold') {
+        const topSection = document.getElementById('top-products-tbody');
+        if (topSection) {
+          topSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        return;
+      }
+
+      if (typeof showView === 'function') {
+        showView('orders-view');
+      }
+
+      const orderStatusFilter = document.getElementById('order-status-filter');
+      if (orderStatusFilter) {
+        if (type === 'revenue' || type === 'completed') {
+          orderStatusFilter.value = 'Hoàn thành';
+        } else if (type === 'orders') {
+          orderStatusFilter.value = 'All';
+        }
+        if (typeof loadOrders === 'function') {
+          loadOrders();
+        }
+      }
+    }
+    window.navigateToKpiDetail = navigateToKpiDetail;
 
     async function loadStats() {
       const queryParams = getStatsQueryParams();
