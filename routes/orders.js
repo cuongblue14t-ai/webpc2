@@ -208,6 +208,22 @@ router.post('/', async (req, res) => {
 // GET sold products stats from completed orders (Admin & Manager)
 router.get('/stats/sold-products', verifyToken, requireRole('Admin', 'Manager'), async (req, res) => {
   try {
+    let whereClause = "WHERE dh.trang_thai_don_hang = 'Hoàn thành'";
+    let params = [];
+
+    if (req.query.startDate) {
+      let start = req.query.startDate;
+      if (!start.includes(' ')) start += ' 00:00:00';
+      whereClause += " AND dh.ngay_dat >= ?";
+      params.push(start);
+    }
+    if (req.query.endDate) {
+      let end = req.query.endDate;
+      if (!end.includes(' ')) end += ' 23:59:59';
+      whereClause += " AND dh.ngay_dat <= ?";
+      params.push(end);
+    }
+
     const [rows] = await db.query(`
       SELECT 
         sp.id AS id_san_pham,
@@ -221,10 +237,10 @@ router.get('/stats/sold-products', verifyToken, requireRole('Admin', 'Manager'),
       JOIN don_hang dh ON ct.id_don_hang = dh.id
       JOIN san_pham sp ON ct.id_san_pham = sp.id
       LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id
-      WHERE dh.trang_thai_don_hang = 'Hoàn thành'
+      ${whereClause}
       GROUP BY sp.id, sp.ten_san_pham, dm.ten_danh_muc, sp.gia
       ORDER BY tong_so_luong_ban DESC
-    `);
+    `, params);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching sold products stats:', error);

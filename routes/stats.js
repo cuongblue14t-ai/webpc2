@@ -6,6 +6,13 @@ const { verifyToken, requireRole } = require('./auth');
 // Protect all stats endpoints to Admin and Manager only
 router.use(verifyToken, requireRole('Admin', 'Manager'));
 
+function formatLocalDate(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Helper to extract date filters
 function getDateRange(req) {
   let start = req.query.startDate;
@@ -13,8 +20,8 @@ function getDateRange(req) {
   
   if (!start) {
     const d = new Date();
-    d.setDate(d.getDate() - 30);
-    start = d.toISOString().split('T')[0] + ' 00:00:00';
+    d.setDate(d.getDate() - 29);
+    start = formatLocalDate(d) + ' 00:00:00';
   } else {
     if (!start.includes(' ')) {
       start = start + ' 00:00:00';
@@ -22,7 +29,7 @@ function getDateRange(req) {
   }
   
   if (!end) {
-    end = new Date().toISOString().split('T')[0] + ' 23:59:59';
+    end = formatLocalDate(new Date()) + ' 23:59:59';
   } else {
     if (!end.includes(' ')) {
       end = end + ' 23:59:59';
@@ -31,6 +38,7 @@ function getDateRange(req) {
   
   return [start, end];
 }
+
 
 // 1. Overview KPIs
 router.get('/overview', async (req, res) => {
