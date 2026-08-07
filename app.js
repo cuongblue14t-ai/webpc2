@@ -36,8 +36,7 @@ app.use((req, res, next) => {
 // Serve static frontend files and uploads with browser caching
 const staticOptions = { maxAge: '1d', etag: true };
 app.use(express.static(path.join(__dirname, 'public'), staticOptions));
-app.use(express.static(path.join(__dirname, '..', 'frontend'), staticOptions));
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), staticOptions));
+app.use(express.static(path.join(__dirname, 'frontend'), staticOptions));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), staticOptions));
 
 // Explicit root route serving index.html

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nam Nguyễn PC & Workstation - Tìm kiếm & Lọc sản phẩm</title>
+  <link rel="stylesheet" href="style.css?v=3" />
+  <style>
+    *, body, button, input, select, textarea, option { font-family: 'Arimo', Arial, Helvetica, sans-serif !important; }
+    .filter-panel { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; font-family: 'Arimo', Arial, Helvetica, sans-serif !important; }
+    .filter-panel label { font-weight: 600; font-family: 'Arimo', Arial, Helvetica, sans-serif !important; }
+    .filter-panel select,
+    .filter-panel input { padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; font-family: 'Arimo', Arial, Helvetica, sans-serif !important; }
+    @media (max-width: 768px) { .filter-panel { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <!-- Header (reuse) -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="Nam Nguyễn PC & Workstation Logo" class="logo-img">
+        <div class="company-brand-text">
+          <span class="company-title">NAM NGUYỄN</span>
+          <span class="company-sub">PC & WORKSTATION</span>
+        </div>
+      </a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="categories.html">Danh mục</a></li>
+        <li><a href="products.html">Sản phẩm</a></li>
+        <li><a href="promotions.html" class="promo-link-highlight">🔥 Khuyến Mãi</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+        <li><a href="cart.html" class="cart-link">🛒 Giỏ hàng (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+    <div class="search-wrap">
+      <input type="text" placeholder="Tìm kiếm sản phẩm..." id="global-search" />
+      <button id="global-search-btn">🔍</button>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  </header>
+
+  <main class="site-main">
+    <section class="filter-panel">
+      <div>
+        <label for="filter-name">Tên</label><br/>
+        <input type="text" id="filter-name" placeholder="Tên sản phẩm" />
+      </div>
+      <div>
+        <label for="filter-category">Danh mục</label><br/>
+        <select id="filter-category">
+          <option value="All">Tất cả</option>
+        </select>
+      </div>
+      <div>
+        <label for="filter-price-min">Giá từ</label><br/>
+        <input type="number" id="filter-price-min" min="0" placeholder="0" />
+      </div>
+      <div>
+        <label for="filter-price-max">Giá tới</label><br/>
+        <input type="number" id="filter-price-max" min="0" placeholder="∞" />
+      </div>
+
+      <div style="align-self:end;">
+        <button id="apply-filters" style="background:var(--gold);color:var(--dark);border:none;padding:0.5rem 1rem;border-radius:4px;cursor:pointer;">Áp dụng</button>
+      </div>
+    </section>
+
+    <div class="product-grid" id="product-grid"></div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 NAM NGUYỄN PC & WORKSTATION. All rights reserved.</p>
+  </footer>
+
+  <script src="cart.js?v=3"></script>
+  <script src="product-card.js?v=3"></script>
+  <script src="zalo-qr-modal.js"></script>
+  <script>
+    const apiUrl = '/api/products';
+    let allProducts = [];
+
+    async function loadAll() {
+      try {
+        const res = await fetch(apiUrl);
+        allProducts = await res.json();
+        
+        // Fetch categories
+        const catRes = await fetch('/api/categories');
+        const cats = await catRes.json();
+        const select = document.getElementById('filter-category');
+        cats.forEach(c => {
+          select.innerHTML += `<option value="${c.ten_danh_muc}">${c.ten_danh_muc}</option>`;
+        });
+
+        // Check URL search parameter 'q'
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('q');
+        if (query) {
+          const searchInput = document.getElementById('global-search');
+          const filterNameInput = document.getElementById('filter-name');
+          if (searchInput) searchInput.value = query;
+          if (filterNameInput) filterNameInput.value = query;
+        }
+
+        applyFilters();
+      } catch (e) { console.error('Load error', e); }
+    }
+
+    function render(list) {
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = '';
+      if (list.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:2rem; color:#6b7280; font-size:1.1rem;">Không tìm thấy sản phẩm nào phù hợp với từ khóa.</p>';
+        return;
+      }
+      list.forEach(p => {
+        grid.appendChild(buildProductCard(p));
+      });
+    }
+
+    function applyFilters() {
+      const name = document.getElementById('filter-name') ? document.getElementById('filter-name').value.trim().toLowerCase() : '';
+      const category = document.getElementById('filter-category') ? document.getElementById('filter-category').value : 'All';
+      const minVal = document.getElementById('filter-price-min') ? document.getElementById('filter-price-min').value : '';
+      const maxVal = document.getElementById('filter-price-max') ? document.getElementById('filter-price-max').value : '';
+      const priceMin = minVal !== '' ? parseFloat(minVal) : NaN;
+      const priceMax = maxVal !== '' ? parseFloat(maxVal) : NaN;
+
+      let filtered = allProducts.filter(p => {
+        if (name) {
+          const pName = (p.ten_san_pham || '').toLowerCase();
+          const pDesc = (p.mo_ta || '').toLowerCase();
+          if (!pName.includes(name) && !pDesc.includes(name)) return false;
+        }
+
+        if (category !== 'All' && (p.ten_danh_muc || '').trim() !== category.trim()) return false;
+
+        const basePrice = Number(p.gia) || 0;
+        const salePrice = p.gia_khuyen_mai ? Number(p.gia_khuyen_mai) : 0;
+        const effectivePrice = (salePrice > 0 && salePrice < basePrice) ? salePrice : basePrice;
+
+        if (!isNaN(priceMin) && effectivePrice < priceMin) return false;
+        if (!isNaN(priceMax) && effectivePrice > priceMax) return false;
+
+        return true;
+      });
+      render(filtered);
+    }
+
+    function doSearch() {
+      const term = document.getElementById('global-search').value.trim();
+      document.getElementById('filter-name').value = term;
+      applyFilters();
+    }
+
+    document.getElementById('apply-filters').addEventListener('click', applyFilters);
+    document.getElementById('global-search-btn').addEventListener('click', doSearch);
+    document.getElementById('global-search').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') doSearch();
+    });
+    ['filter-name', 'filter-price-min', 'filter-price-max'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('keypress', e => {
+          if (e.key === 'Enter') applyFilters();
+        });
+      }
+    });
+
+    loadAll();
+  </script>
+</body>
+</html>

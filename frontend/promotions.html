@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chương Trình Khuyến Mãi | Nam Nguyễn PC & Workstation</title>
+  <link rel="stylesheet" href="style.css?v=8" />
+</head>
+<body class="promotions-page">
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="Nam Nguyễn PC & Workstation Logo" class="logo-img">
+        <div class="company-brand-text">
+          <span class="company-title">NAM NGUYỄN</span>
+          <span class="company-sub">PC & WORKSTATION</span>
+        </div>
+      </a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="categories.html">Danh mục</a></li>
+        <li><a href="products.html">Sản phẩm</a></li>
+        <li><a href="promotions.html" class="promo-link-highlight active">🔥 Khuyến Mãi</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+        <li><a href="cart.html" class="cart-link">🛒 Giỏ hàng (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+    <div class="search-wrap">
+      <input type="text" placeholder="Tìm kiếm sản phẩm..." id="search-input" />
+      <button id="search-btn">🔍</button>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  </header>
+
+  <!-- Unified Campaign Navigation Bar -->
+  <section class="campaign-nav-bar">
+    <div class="container">
+      <div class="campaign-tabs-wrapper">
+        <button class="main-campaign-tab active" data-campaign="quoc-khanh-2-9" onclick="switchCampaignTab('quoc-khanh-2-9')">
+          <span class="tab-icon">🇻🇳</span>
+          <span class="tab-text">Khuyến Mãi Quốc Khánh 2/9</span>
+        </button>
+        <button class="main-campaign-tab" data-campaign="build-pc" onclick="switchCampaignTab('build-pc')">
+          <span class="tab-icon">⚡</span>
+          <span class="tab-text">Build PC Đỉnh Cao - Giảm 30%</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Campaign 1: Quốc Khánh 2/9 Section -->
+  <div id="campaign-sec-29" class="campaign-section-content active">
+    <section class="promo-hero-banner">
+      <div class="container">
+        <div class="promo-hero-content">
+          <span class="badge-campaign-tag">SỰ KIỆN LỚN NHẤT NĂM</span>
+          <h1 class="promo-hero-title">🔥 ĐẠI LỄ QUỐC KHÁNH 2/9 🔥</h1>
+          <p class="promo-hero-subtitle">BẢO HÀNH VÀNG – GIÁ SẬP SÀN – TẶNG QUÀ KHỦNG TOÀN QUỐC</p>
+          
+          <div class="promo-highlight-box">
+            <div class="promo-discount-tag">
+              <span>2.000.000đ</span> GIẢM TRỰC TIẾP
+            </div>
+            <p>Cho tất cả dòng máy tính PC Gaming, Workstation & Linh kiện đồ họa cao cấp</p>
+          </div>
+
+          <div class="countdown-wrapper">
+            <p class="cd-title">⏱️ CHƯƠNG TRÌNH KẾT THÚC SAU:</p>
+            <div class="countdown-boxes">
+              <div class="cd-box"><span id="cd-days">05</span><small>Ngày</small></div>
+              <span class="cd-colon">:</span>
+              <div class="cd-box"><span id="cd-hours">12</span><small>Giờ</small></div>
+              <span class="cd-colon">:</span>
+              <div class="cd-box"><span id="cd-mins">25</span><small>Phút</small></div>
+              <span class="cd-colon">:</span>
+              <div class="cd-box"><span id="cd-secs">48</span><small>Giây</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Product Grid for 2/9 Flash Sale -->
+    <section class="promo-products-section">
+      <div class="container">
+        <div class="promo-products-header">
+          <h2 class="promo-section-title"><span>💻</span> DANH SÁCH SẢN PHẨM KHUYẾN MÃI 2/9</h2>
+        </div>
+        <div class="product-grid" id="promo-products-grid">
+          <div class="loading-spinner">Đang tải danh sách sản phẩm khuyến mãi...</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Campaign 2: Build PC Đỉnh Cao Section -->
+  <div id="campaign-sec-build-pc" class="campaign-section-content" style="display: none;">
+    <section class="build-pc-hero">
+      <div class="build-pc-hero-overlay"></div>
+      <div class="build-pc-hero-content">
+        <div class="build-pc-badges">
+          <span class="badge-tag orange">BUILD PC CHUYÊN NGHIỆP</span>
+          <span class="badge-tag red">ƯU ĐÃI LÊN ĐẾN 30%</span>
+        </div>
+        <h1 class="build-pc-title">BUILD PC ĐỈNH CAO</h1>
+        <p class="build-pc-subtitle">HIỆU NĂNG – TRẢI NGHIỆM – ĐẲNG CẤP</p>
+        
+        <div class="build-pc-features-row">
+          <div class="feat-item"><span class="feat-icon">⚡</span> <span>Cấu Hình Tối Ưu</span></div>
+          <div class="feat-item"><span class="feat-icon">🛡️</span> <span>Bảo Hành 36 Tháng</span></div>
+          <div class="feat-item"><span class="feat-icon">🚚</span> <span>Giao Hàng Toàn Quốc</span></div>
+          <div class="feat-item"><span class="feat-icon">💳</span> <span>Trả Góp 0% Lãi Suất</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>© 2026 NAM NGUYỄN PC & WORKSTATION. All rights reserved.</p>
+  </footer>
+
+  <script src="cart.js?v=4"></script>
+  <script src="product-card.js?v=4"></script>
+  <script src="zalo-qr-modal.js"></script>
+  <script src="auth-modal.js"></script>
+
+  <script>
+    // Header search redirect
+    function executeHeaderSearch() {
+      const term = document.getElementById('search-input').value.trim();
+      if (term) {
+        window.location.href = 'products.html?search=' + encodeURIComponent(term);
+      }
+    }
+    const searchBtn = document.getElementById('search-btn');
+    const searchInput = document.getElementById('search-input');
+    if (searchBtn) searchBtn.addEventListener('click', executeHeaderSearch);
+    if (searchInput) searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') executeHeaderSearch();
+    });
+
+    // Toast alert
+    function showToast(msg) {
+      let toast = document.getElementById('toast-msg');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-msg';
+        toast.className = 'toast-notification';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Countdown Timer logic
+    function startCountdown() {
+      const targetTime = Date.now() + (5 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000);
+      
+      function updateTimer() {
+        const now = Date.now();
+        const diff = targetTime - now;
+        if (diff <= 0) return;
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const mins = Math.floor((diff / (1000 * 60)) % 60);
+        const secs = Math.floor((diff / 1000) % 60);
+
+        document.getElementById('cd-days').textContent = String(days).padStart(2, '0');
+        document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('cd-mins').textContent = String(mins).padStart(2, '0');
+        document.getElementById('cd-secs').textContent = String(secs).padStart(2, '0');
+      }
+
+      updateTimer();
+      setInterval(updateTimer, 1000);
+    }
+    startCountdown();
+
+    // Campaign Switcher Tabs Logic
+    function switchCampaignTab(campaignKey) {
+      document.querySelectorAll('.main-campaign-tab').forEach(t => {
+        if (t.dataset.campaign === campaignKey) t.classList.add('active');
+        else t.classList.remove('active');
+      });
+
+      const sec29 = document.getElementById('campaign-sec-29');
+      const secBpc = document.getElementById('campaign-sec-build-pc');
+
+      if (campaignKey === 'build-pc') {
+        sec29.style.display = 'none';
+        secBpc.style.display = 'block';
+      } else {
+        sec29.style.display = 'block';
+        secBpc.style.display = 'none';
+      }
+    }
+
+    // Read URL param on load
+    const urlParams = new URLSearchParams(window.location.search);
+    const campaignParam = urlParams.get('campaign');
+    if (campaignParam === 'build-pc') {
+      switchCampaignTab('build-pc');
+    }
+
+    // Fetch EXCLUSIVELY Flash Sale products for 2/9 campaign
+    async function fetchPromoProducts() {
+      const grid = document.getElementById('promo-products-grid');
+      try {
+        const res = await fetch('/api/products?campaign=quoc-khanh-2-9');
+        let products = await res.json();
+        if (!Array.isArray(products)) products = [];
+
+        renderPromoProducts(products);
+      } catch (err) {
+        console.error('Error fetching promo products:', err);
+        grid.innerHTML = '<div class="error-msg">Không thể tải danh sách sản phẩm khuyến mãi. Vui lòng thử lại sau.</div>';
+      }
+    }
+
+    function renderPromoProducts(productsList) {
+      const grid = document.getElementById('promo-products-grid');
+      grid.innerHTML = '';
+
+      if (productsList.length === 0) {
+        grid.innerHTML = '<div class="no-products" style="text-align:center; padding: 2rem; color: #6b7280; font-weight:600;">Hiện chưa có sản phẩm nào thuộc phân loại Flash Sale 2/9.<br>Vui lòng chọn bật Flash Sale cho sản phẩm trong trang Quản trị Admin.</div>';
+        return;
+      }
+
+      productsList.forEach(product => {
+        const card = buildProductCard(product);
+        grid.appendChild(card);
+      });
+    }
+
+    // Initialize Page Data
+    fetchPromoProducts();
+  </script>
+</body>
+</html>

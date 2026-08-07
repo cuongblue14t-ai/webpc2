@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nam Nguyễn PC & Workstation - Sản phẩm</title>
+  <link rel="stylesheet" href="style.css?v=5" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="index.html" class="logo-link">
+        <img src="logo.png" alt="Nam Nguyễn PC & Workstation Logo" class="logo-img">
+        <div class="company-brand-text">
+          <span class="company-title">NAM NGUYỄN</span>
+          <span class="company-sub">PC & WORKSTATION</span>
+        </div>
+      </a>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="categories.html">Danh mục</a></li>
+        <li><a href="products.html" class="active">Sản phẩm</a></li>
+        <li><a href="promotions.html" class="promo-link-highlight">🔥 Khuyến Mãi</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+        <li><a href="cart.html" class="cart-link">🛒 Giỏ hàng (<span id="cart-count">0</span>)</a></li>
+      </ul>
+    </nav>
+    <div class="search-wrap">
+      <input type="text" placeholder="Tìm kiếm sản phẩm..." id="search-input" />
+      <button id="search-btn">🔍</button>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+  </header>
+
+  <main class="site-main">
+    <div style="max-width: 1200px; margin: 1rem auto 1.5rem auto; display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--dark); margin: 0;">TẤT CẢ SẢN PHẨM</h2>
+    </div>
+
+    <!-- Filter Panel -->
+    <section class="filter-panel" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+      <div>
+        <label for="filter-name" style="font-weight: 600;">Tên</label><br/>
+        <input type="text" id="filter-name" placeholder="Tên sản phẩm" style="padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px;" />
+      </div>
+      <div>
+        <label for="category-filter" style="font-weight: 600;">Danh mục</label><br/>
+        <select id="category-filter" style="padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px;">
+          <option value="All">Tất cả danh mục</option>
+        </select>
+      </div>
+      <div>
+        <label for="filter-price-min" style="font-weight: 600;">Giá từ</label><br/>
+        <input type="number" id="filter-price-min" min="0" placeholder="0" style="padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px;" />
+      </div>
+      <div>
+        <label for="filter-price-max" style="font-weight: 600;">Giá tới</label><br/>
+        <input type="number" id="filter-price-max" min="0" placeholder="∞" style="padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px;" />
+      </div>
+
+      <div>
+        <label for="sort-select" style="font-weight: 600;">Sắp xếp</label><br/>
+        <select id="sort-select" style="padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px;">
+          <option value="name-asc">Tên A→Z</option>
+          <option value="price-asc">Giá thấp→cao</option>
+          <option value="price-desc">Giá cao→thấp</option>
+        </select>
+      </div>
+      <div style="align-self:end;">
+        <button id="apply-filters" style="background:var(--gold);color:var(--dark);border:none;padding:0.5rem 1rem;border-radius:4px;cursor:pointer;font-weight:700;">Áp dụng</button>
+      </div>
+    </section>
+
+    <!-- Product Grid & Pagination -->
+    <div class="product-grid" id="product-grid"></div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 NAM NGUYỄN PC & WORKSTATION. All rights reserved.</p>
+  </footer>
+
+  <script src="cart.js?v=4"></script>
+  <script src="product-card.js?v=4"></script>
+  <script src="zalo-qr-modal.js"></script>
+  <script src="auth-modal.js"></script>
+  <script>
+    const apiUrl = '/api/products';
+    const pageSize = 12;
+    let allProducts = [];
+    let currentPage = 1;
+    let currentFilter = 'All';
+    let currentSort = 'name-asc';
+
+    async function fetchProducts() {
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        allProducts = data;
+        
+        // Read URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const catId = urlParams.get('cat');
+        const searchQuery = urlParams.get('search') || urlParams.get('q');
+        
+        if (searchQuery) {
+          const filterNameInput = document.getElementById('filter-name');
+          if (filterNameInput) filterNameInput.value = searchQuery;
+        }
+        
+        // Fetch categories to populate select box
+        const catRes = await fetch('/api/categories');
+        const cats = await catRes.json();
+        const select = document.getElementById('category-filter');
+        
+        select.innerHTML = '<option value="All">Tất cả danh mục</option>';
+        cats.forEach(c => {
+          select.innerHTML += `<option value="${c.ten_danh_muc}">${c.ten_danh_muc}</option>`;
+        });
+
+        if (catId) {
+          const category = cats.find(c => c.id == catId);
+          if (category) {
+            currentFilter = category.ten_danh_muc;
+            select.value = category.ten_danh_muc;
+          }
+        }
+        
+        applyFilterSort();
+      } catch (e) {
+        console.error('Failed to fetch products', e);
+      }
+    }
+
+    function applyFilterSort() {
+      const name = document.getElementById('filter-name') ? document.getElementById('filter-name').value.trim().toLowerCase() : '';
+      const catSelect = document.getElementById('category-filter');
+      const sortSelect = document.getElementById('sort-select');
+      
+      if (catSelect) currentFilter = catSelect.value;
+      if (sortSelect) currentSort = sortSelect.value;
+
+      const priceMin = document.getElementById('filter-price-min') && document.getElementById('filter-price-min').value !== '' ? parseFloat(document.getElementById('filter-price-min').value) : NaN;
+      const priceMax = document.getElementById('filter-price-max') && document.getElementById('filter-price-max').value !== '' ? parseFloat(document.getElementById('filter-price-max').value) : NaN;
+
+      let filtered = allProducts;
+      
+      // Filter by category
+      if (currentFilter && currentFilter !== 'All') {
+        filtered = filtered.filter(p => (p.ten_danh_muc || '').trim() === currentFilter.trim());
+      }
+      
+      // Advanced filters
+      filtered = filtered.filter(p => {
+        // Search term in name or description
+        if (name) {
+          const pName = (p.ten_san_pham || '').toLowerCase();
+          const pDesc = (p.mo_ta || '').toLowerCase();
+          if (!pName.includes(name) && !pDesc.includes(name)) return false;
+        }
+
+        // Calculate effective display price (discount price if available, otherwise regular price)
+        const basePrice = Number(p.gia) || 0;
+        const salePrice = p.gia_khuyen_mai ? Number(p.gia_khuyen_mai) : 0;
+        const effectivePrice = (salePrice > 0 && salePrice < basePrice) ? salePrice : basePrice;
+
+        if (!isNaN(priceMin) && effectivePrice < priceMin) return false;
+        if (!isNaN(priceMax) && effectivePrice > priceMax) return false;
+
+        return true;
+      });
+
+      // Helper to get effective price for sorting
+      const getPrice = p => {
+        const base = Number(p.gia) || 0;
+        const sale = p.gia_khuyen_mai ? Number(p.gia_khuyen_mai) : 0;
+        return (sale > 0 && sale < base) ? sale : base;
+      };
+
+      // Sorting
+      if (currentSort === 'name-asc') {
+        filtered.sort((a, b) => (a.ten_san_pham || '').localeCompare(b.ten_san_pham || ''));
+      } else if (currentSort === 'price-asc') {
+        filtered.sort((a, b) => getPrice(a) - getPrice(b));
+      } else if (currentSort === 'price-desc') {
+        filtered.sort((a, b) => getPrice(b) - getPrice(a));
+      }
+      renderPagination(filtered);
+      renderPage(filtered, currentPage);
+    }
+
+    function renderPage(list, page) {
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const pageItems = list.slice(start, end);
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = '';
+      if (pageItems.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#6b7280; padding:2rem; font-style:italic;">Không tìm thấy sản phẩm nào phù hợp với bộ lọc.</p>';
+        return;
+      }
+      pageItems.forEach(p => {
+        grid.appendChild(buildProductCard(p));
+      });
+    }
+
+    function renderPagination(list) {
+      const totalPages = Math.ceil(list.length / pageSize) || 1;
+      const container = document.getElementById('pagination');
+      container.innerHTML = '';
+      if (totalPages <= 1) return;
+
+      const prev = document.createElement('button');
+      prev.textContent = '« Prev';
+      prev.disabled = currentPage === 1;
+      prev.onclick = () => { currentPage--; applyFilterSort(); };
+      container.appendChild(prev);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.className = i === currentPage ? 'active' : '';
+        btn.onclick = () => { currentPage = i; applyFilterSort(); };
+        container.appendChild(btn);
+      }
+
+      const next = document.createElement('button');
+      next.textContent = 'Next »';
+      next.disabled = currentPage === totalPages;
+      next.onclick = () => { currentPage++; applyFilterSort(); };
+      container.appendChild(next);
+    }
+
+    // Event listeners
+    document.getElementById('category-filter').addEventListener('change', e => {
+      currentFilter = e.target.value;
+      currentPage = 1;
+      applyFilterSort();
+    });
+    document.getElementById('sort-select').addEventListener('change', e => {
+      currentSort = e.target.value;
+      currentPage = 1;
+      applyFilterSort();
+    });
+    if (document.getElementById('apply-filters')) {
+      document.getElementById('apply-filters').addEventListener('click', () => {
+        currentPage = 1;
+        applyFilterSort();
+      });
+    }
+
+    // Listen for Enter key on filter input fields
+    ['filter-name', 'filter-price-min', 'filter-price-max'].forEach(id => {
+      const inputEl = document.getElementById(id);
+      if (inputEl) {
+        inputEl.addEventListener('keypress', e => {
+          if (e.key === 'Enter') {
+            currentPage = 1;
+            applyFilterSort();
+          }
+        });
+      }
+    });
+
+    function executeHeaderSearch() {
+      const term = document.getElementById('search-input').value.trim();
+      if (term) {
+        window.location.href = 'products.html?search=' + encodeURIComponent(term);
+      }
+    }
+    const searchBtn = document.getElementById('search-btn');
+    const searchInput = document.getElementById('search-input');
+    if (searchBtn) searchBtn.addEventListener('click', executeHeaderSearch);
+    if (searchInput) searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') executeHeaderSearch();
+    });
+
+    // Initial load
+    fetchProducts();
+  </script>
+</body>
+</html>
