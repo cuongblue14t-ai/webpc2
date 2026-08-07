@@ -3,8 +3,26 @@
  * @param {Object} p – product object from API
  * @returns {HTMLElement} – .product-card element
  */
-function resolveProductImg(url) {
-  if (!url || typeof url !== 'string') return 'placeholder.png';
+function getCategoryFallbackImg(categoryName) {
+  const cat = (categoryName || '').toUpperCase();
+  if (cat.includes('CPU SEVER') || cat.includes('SERVER CPU')) return '/uploads/products/cpu_server.png';
+  if (cat.includes('CPU')) return '/uploads/products/cpu_pc.png';
+  if (cat.includes('MAINBOARD SEVER')) return '/uploads/products/mainboard_server.png';
+  if (cat.includes('MAINBOARD') || cat.includes('MAIN')) return '/uploads/products/mainboard_pc.png';
+  if (cat.includes('RAM SEVER')) return '/uploads/products/ram_server.png';
+  if (cat.includes('RAM')) return '/uploads/products/ram_pc.png';
+  if (cat.includes('SSD') || cat.includes('CỨNG')) return '/uploads/products/ssd.png';
+  if (cat.includes('MÀN HÌNH') || cat.includes('MONITOR')) return '/uploads/products/monitor.jpg';
+  if (cat.includes('CARD') || cat.includes('VGA') || cat.includes('GPU')) return '/uploads/products/gpu.png';
+  if (cat.includes('NGUỒN') || cat.includes('PSU')) return '/uploads/products/psu.png';
+  if (cat.includes('TẢN NHIỆT') || cat.includes('COOLER')) return '/uploads/products/cpu_cooler.png';
+  if (cat.includes('VỎ') || cat.includes('CASE')) return '/uploads/products/pc_case.png';
+  return '/uploads/products/cpu_pc.png';
+}
+
+function resolveProductImg(url, categoryName) {
+  const fallback = getCategoryFallbackImg(categoryName);
+  if (!url || typeof url !== 'string') return fallback;
   let trimmed = url.trim();
   if (trimmed.startsWith('uploads/')) trimmed = '/' + trimmed;
   if (window.location.protocol === 'file:' && trimmed.startsWith('/uploads/')) {
@@ -17,10 +35,11 @@ function buildProductCard(p) {
   const card = document.createElement('div');
   card.className = 'product-card';
 
-  const rawImg = p.duong_dan_anh || (p.images && p.images[0]) || 'placeholder.png';
-  const img = resolveProductImg(rawImg);
-  const name = p.ten_san_pham || 'Sản phẩm';
   const category = p.ten_danh_muc || '';
+  const fallbackImg = getCategoryFallbackImg(category);
+  const rawImg = p.duong_dan_anh || (p.images && p.images[0]);
+  const img = resolveProductImg(rawImg, category);
+  const name = p.ten_san_pham || 'Sản phẩm';
   const price = p.gia ? Number(p.gia) : 0;
   const salePrice = p.gia_khuyen_mai ? Number(p.gia_khuyen_mai) : 0;
   const desc = p.mo_ta || '';
@@ -40,7 +59,7 @@ function buildProductCard(p) {
     ${badgeHTML}
     <div class="card-img">
       <a href="product_detail.html?id=${p.id}">
-        <img src="${img}" alt="${name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='placeholder.png';" />
+        <img src="${img}" alt="${name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${fallbackImg}';" />
       </a>
     </div>
     <div class="card-body">
