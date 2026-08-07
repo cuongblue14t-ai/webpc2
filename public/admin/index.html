@@ -665,40 +665,105 @@
       
       <!-- Dashboard View -->
       <div id="dashboard-view" class="section-view active">
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <h3 style="margin:0; font-size:1.2rem; color:var(--dark);">⚡ Tổng quan hoạt động kinh doanh</h3>
-          <p style="margin: 4px 0 0 0; color:#6b7280; font-size:0.85rem;">Nhấp vào bất kỳ thẻ thống kê nào bên dưới để chuyển nhanh đến thông tin chi tiết</p>
+        <!-- Overview Header Card -->
+        <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-left: 5px solid var(--orange); padding: 1.5rem 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+              <span style="background: var(--orange-glow); color: var(--orange); padding: 0.25rem 0.6rem; border-radius: 8px; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.5px;">SYSTEM LIVE</span>
+              <span style="display: inline-block; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e;"></span>
+            </div>
+            <h3 style="margin:0; font-size:1.35rem; font-weight: 800; color:var(--dark); letter-spacing: -0.3px;">⚡ Tổng quan hoạt động kinh doanh</h3>
+            <p style="margin: 6px 0 0 0; color:#64748b; font-size:0.88rem; font-weight: 500;">Nhấp vào bất kỳ thẻ thống kê nào bên dưới để chuyển nhanh đến thông tin chi tiết</p>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <button class="btn-sm" onclick="loadDashboardStats()" style="background: #ffffff; color: var(--text-primary); border: 1px solid #cbd5e1; padding: 0.6rem 1.1rem; border-radius: 10px; font-weight: 700; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+              <span>🔄 Tải lại dữ liệu</span>
+            </button>
+          </div>
         </div>
 
         <!-- Dashboard KPI Cards Grid -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.25rem; margin-bottom:1.5rem;">
-          <!-- Card Doanh thu -->
-          <div class="card kpi-card-clickable" onclick="navigateToKpiDetail('revenue')" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color:#fff; border:none; padding:1.25rem;">
-            <div style="font-size:0.8rem; font-weight:600; opacity:0.85;">TỔNG DOANH THU</div>
-            <div id="dash-kpi-revenue" style="font-size:1.6rem; font-weight:700; margin-top:0.4rem;">0₫</div>
-            <div style="font-size:0.75rem; opacity:0.75; margin-top:0.4rem;">Đơn hàng thành công ➔</div>
-          </div>
-          <!-- Card Đơn hàng -->
-          <div class="card kpi-card-clickable" onclick="navigateToKpiDetail('orders')" style="background: linear-gradient(135deg, #115e59, #14b8a6); color:#fff; border:none; padding:1.25rem;">
-            <div style="font-size:0.8rem; font-weight:600; opacity:0.85;">TỔNG SỐ ĐƠN HÀNG</div>
-            <div id="dash-kpi-orders" style="font-size:1.6rem; font-weight:700; margin-top:0.4rem;">0</div>
-            <div style="font-size:0.75rem; opacity:0.75; margin-top:0.4rem;">Phát sinh trong kỳ ➔</div>
-          </div>
-          <!-- Card Đơn thành công -->
-          <div class="card kpi-card-clickable" onclick="navigateToKpiDetail('completed')" style="background: linear-gradient(135deg, #15803d, #22c55e); color:#fff; border:none; padding:1.25rem;">
-            <div style="font-size:0.8rem; font-weight:600; opacity:0.85;">ĐƠN THÀNH CÔNG</div>
-            <div id="dash-kpi-completed" style="font-size:1.6rem; font-weight:700; margin-top:0.4rem;">0</div>
-            <div style="font-size:0.75rem; opacity:0.75; margin-top:0.4rem;">Giao hàng thành công ➔</div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:1.25rem; margin-bottom:1.5rem;">
+          
+          <!-- Card 1: Doanh thu -->
+          <div class="card kpi-card-clickable" onclick="navigateToKpiDetail('revenue')" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%); color:#fff; border: 1px solid rgba(255,255,255,0.12); padding:1.4rem; border-radius:18px; position:relative; overflow:hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);">
+            <div style="position:absolute; top:-20px; right:-20px; width:90px; height:90px; background:rgba(59, 130, 246, 0.25); filter:blur(25px); border-radius:50%; pointer-events:none;"></div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+              <span style="font-size:0.75rem; font-weight:700; letter-spacing:0.8px; opacity:0.85; text-transform:uppercase; color:#93c5fd;">TỔNG DOANH THU</span>
+              <div style="width:42px; height:42px; background:rgba(59, 130, 246, 0.2); border:1px solid rgba(147, 197, 253, 0.3); backdrop-filter:blur(8px); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                💰
+              </div>
+            </div>
+            
+            <div id="dash-kpi-revenue" style="font-size:1.75rem; font-weight:800; letter-spacing:-0.5px; color:#ffffff; font-family:'Inter', sans-serif;">0₫</div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.1); font-size:0.78rem; color:#bfdbfe; font-weight:600;">
+              <span>Đơn hàng thành công</span>
+              <span style="background:rgba(255,255,255,0.15); padding:2px 8px; border-radius:10px;">Chi tiết ➔</span>
+            </div>
           </div>
 
-          <!-- Card Sản phẩm đã bán -->
-          <div class="card kpi-card-clickable" onclick="navigateToKpiDetail('sold')" style="background: linear-gradient(135deg, #7c2d12, #ea580c); color:#fff; border:none; padding:1.25rem;">
-            <div style="font-size:0.8rem; font-weight:600; opacity:0.85;">SẢN PHẨM ĐÃ BÁN</div>
-            <div id="dash-kpi-sold" style="font-size:1.6rem; font-weight:700; margin-top:0.4rem;">0</div>
-            <div style="font-size:0.75rem; opacity:0.75; margin-top:0.4rem;">Mục sản phẩm đã bán ➔</div>
+          <!-- Card 2: Đơn hàng -->
+          <div class="card kpi-card-clickable" onclick="navigateToKpiDetail('orders')" style="background: linear-gradient(135deg, #042f2e 0%, #0d9488 100%); color:#fff; border: 1px solid rgba(255,255,255,0.12); padding:1.4rem; border-radius:18px; position:relative; overflow:hidden; box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.3);">
+            <div style="position:absolute; top:-20px; right:-20px; width:90px; height:90px; background:rgba(45, 212, 191, 0.25); filter:blur(25px); border-radius:50%; pointer-events:none;"></div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+              <span style="font-size:0.75rem; font-weight:700; letter-spacing:0.8px; opacity:0.85; text-transform:uppercase; color:#99f6e4;">TỔNG SỐ ĐƠN HÀNG</span>
+              <div style="width:42px; height:42px; background:rgba(45, 212, 191, 0.2); border:1px solid rgba(153, 246, 228, 0.3); backdrop-filter:blur(8px); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                📦
+              </div>
+            </div>
+            
+            <div id="dash-kpi-orders" style="font-size:1.75rem; font-weight:800; letter-spacing:-0.5px; color:#ffffff; font-family:'Inter', sans-serif;">0</div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.1); font-size:0.78rem; color:#ccfbf1; font-weight:600;">
+              <span>Phát sinh trong kỳ</span>
+              <span style="background:rgba(255,255,255,0.15); padding:2px 8px; border-radius:10px;">Chi tiết ➔</span>
+            </div>
           </div>
+
+          <!-- Card 3: Đơn thành công -->
+          <div class="card kpi-card-clickable" onclick="navigateToKpiDetail('completed')" style="background: linear-gradient(135deg, #064e3b 0%, #16a34a 100%); color:#fff; border: 1px solid rgba(255,255,255,0.12); padding:1.4rem; border-radius:18px; position:relative; overflow:hidden; box-shadow: 0 10px 25px -5px rgba(22, 163, 74, 0.3);">
+            <div style="position:absolute; top:-20px; right:-20px; width:90px; height:90px; background:rgba(74, 222, 128, 0.25); filter:blur(25px); border-radius:50%; pointer-events:none;"></div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+              <span style="font-size:0.75rem; font-weight:700; letter-spacing:0.8px; opacity:0.85; text-transform:uppercase; color:#a7f3d0;">ĐƠN THÀNH CÔNG</span>
+              <div style="width:42px; height:42px; background:rgba(74, 222, 128, 0.2); border:1px solid rgba(167, 243, 208, 0.3); backdrop-filter:blur(8px); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                ✅
+              </div>
+            </div>
+            
+            <div id="dash-kpi-completed" style="font-size:1.75rem; font-weight:800; letter-spacing:-0.5px; color:#ffffff; font-family:'Inter', sans-serif;">0</div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.1); font-size:0.78rem; color:#d1fae5; font-weight:600;">
+              <span>Giao hàng hoàn tất</span>
+              <span style="background:rgba(255,255,255,0.15); padding:2px 8px; border-radius:10px;">Chi tiết ➔</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Sản phẩm đã bán -->
+          <div class="card kpi-card-clickable" onclick="navigateToKpiDetail('sold')" style="background: linear-gradient(135deg, #7c2d12 0%, #ea580c 100%); color:#fff; border: 1px solid rgba(255,255,255,0.12); padding:1.4rem; border-radius:18px; position:relative; overflow:hidden; box-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.3);">
+            <div style="position:absolute; top:-20px; right:-20px; width:90px; height:90px; background:rgba(251, 146, 60, 0.25); filter:blur(25px); border-radius:50%; pointer-events:none;"></div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+              <span style="font-size:0.75rem; font-weight:700; letter-spacing:0.8px; opacity:0.85; text-transform:uppercase; color:#ffedd5;">SẢN PHẨM ĐÃ BÁN</span>
+              <div style="width:42px; height:42px; background:rgba(251, 146, 60, 0.2); border:1px solid rgba(254, 215, 170, 0.3); backdrop-filter:blur(8px); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                🔥
+              </div>
+            </div>
+            
+            <div id="dash-kpi-sold" style="font-size:1.75rem; font-weight:800; letter-spacing:-0.5px; color:#ffffff; font-family:'Inter', sans-serif;">0</div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.1); font-size:0.78rem; color:#fed7aa; font-weight:600;">
+              <span>Số lượng bán ra</span>
+              <span style="background:rgba(255,255,255,0.15); padding:2px 8px; border-radius:10px;">Chi tiết ➔</span>
+            </div>
+          </div>
+
         </div>
       </div>
+
 
       <!-- Orders View -->
       <div id="orders-view" class="section-view">
