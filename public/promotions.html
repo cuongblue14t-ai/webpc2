@@ -211,6 +211,12 @@
     const campaignParam = urlParams.get('campaign');
     if (campaignParam === 'build-pc') {
       switchCampaignTab('build-pc');
+    } else if (campaignParam === 'quoc-khanh-2-9' || campaignParam === '2-9' || campaignParam === '29' || window.location.hash.includes('campaign-sec-29')) {
+      switchCampaignTab('quoc-khanh-2-9');
+      setTimeout(() => {
+        const targetSec = document.getElementById('campaign-sec-29');
+        if (targetSec) targetSec.scrollIntoView({ behavior: 'smooth' });
+      }, 200);
     }
 
     // Fetch EXCLUSIVELY Flash Sale products for 2/9 campaign
