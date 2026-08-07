@@ -831,6 +831,7 @@
                 <label for="stats-time-filter" style="font-weight:600; font-size:0.85rem;">Thời gian:</label>
                 <select id="stats-time-filter" style="padding:0.5rem; border:1px solid #d1d5db; border-radius:6px; margin-left:5px;" onchange="handleStatsTimeChange(this.value)">
                   <option value="7days">7 ngày qua</option>
+                  <option value="thisweek">Tuần này</option>
                   <option value="30days" selected>30 ngày qua</option>
                   <option value="thismonth">Tháng này</option>
                   <option value="custom">Tùy chọn</option>
@@ -845,6 +846,12 @@
               <button id="btn-export-stats" class="btn-sm" style="background:#16a34a; color:#fff; padding:0.5rem 1rem; border-radius:6px; border:none; font-weight:700; cursor:pointer;" onclick="exportStatsCSV()">📥 Xuất báo cáo CSV</button>
             </div>
           </div>
+        </div>
+
+        <!-- Active Period Banner -->
+        <div id="stats-active-period-banner" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:0.75rem 1.25rem; border-radius:8px; margin-bottom:1.5rem; font-weight:600; font-size:0.95rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+          <span id="stats-active-period-text">📊 Đang hiển thị thống kê 30 ngày qua</span>
+          <small style="color:#3b82f6; font-weight:500;">💡 Nhấp vào thẻ KPI hoặc biểu đồ bên dưới để xem chi tiết</small>
         </div>
 
         <!-- KPI Cards Grid (6 KPIs) -->
@@ -1776,6 +1783,12 @@
         if (startDate && endDate) {
           queryParams.push(`startDate=${encodeURIComponent(startDate)}`);
           queryParams.push(`endDate=${encodeURIComponent(endDate)}`);
+        }
+
+        const statusSelect = document.getElementById('order-status-filter');
+        const statusVal = statusSelect ? statusSelect.value : 'all';
+        if (statusVal && statusVal !== 'all' && statusVal !== 'All') {
+          queryParams.push(`status=${encodeURIComponent(statusVal)}`);
         }
 
         if (queryParams.length > 0) {
@@ -4147,7 +4160,9 @@
       if (customBox) {
         customBox.style.display = val === 'custom' ? 'flex' : 'none';
       }
-      loadStats();
+      if (val !== 'custom') {
+        loadStats();
+      }
     }
 
     function getStatsQueryParams() {
@@ -4160,6 +4175,12 @@
       if (val === '7days') {
         const d = new Date();
         d.setDate(d.getDate() - 6);
+        startDate = formatLocalDate(d);
+        endDate = formatLocalDate(now);
+      } else if (val === 'thisweek') {
+        const d = new Date();
+        const dayOfWeek = d.getDay() || 7;
+        d.setDate(d.getDate() - dayOfWeek + 1);
         startDate = formatLocalDate(d);
         endDate = formatLocalDate(now);
       } else if (val === '30days') {
@@ -4176,6 +4197,7 @@
         const endInput = document.getElementById('stats-end-date');
         if (startInput) startDate = startInput.value;
         if (endInput) endDate = endInput.value;
+        if (!startDate || !endDate) return 'INVALID_CUSTOM';
       }
 
       let params = [];
@@ -4185,12 +4207,36 @@
       return params.length > 0 ? '?' + params.join('&') : '';
     }
 
+    function exportStatsCSV() {
+      const queryParams = getStatsQueryParams();
+      if (queryParams === 'INVALID_CUSTOM') {
+        alert('Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc!');
+        return;
+      }
+      window.open(`/api/stats/export${queryParams}`, '_blank');
+    }
+
     async function loadStats() {
       const queryParams = getStatsQueryParams();
+      if (queryParams === 'INVALID_CUSTOM') return;
+
       const btnLoad = document.getElementById('btn-load-stats');
       if (btnLoad) {
         btnLoad.textContent = '⌛ Đang tải...';
         btnLoad.disabled = true;
+      }
+
+      // Update Active Period Banner text
+      const dateRange = getActiveDateRangeFromQueryParams();
+      const bannerTextEl = document.getElementById('stats-active-period-text');
+      if (bannerTextEl) {
+        const filterSelect = document.getElementById('stats-time-filter');
+        const filterText = filterSelect ? filterSelect.options[filterSelect.selectedIndex].text : '';
+        if (dateRange && dateRange.startDate && dateRange.endDate) {
+          bannerTextEl.innerHTML = `📊 Đang hiển thị thống kê từ <strong>${dateRange.startDate}</strong> đến <strong>${dateRange.endDate}</strong> (Bộ lọc: <strong>${filterText}</strong>)`;
+        } else {
+          bannerTextEl.innerHTML = `📊 Đang hiển thị thống kê (Bộ lọc: <strong>${filterText}</strong>)`;
+        }
       }
 
       try {
@@ -4434,6 +4480,23 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          onClick: (evt, activeElements) => {
+            if (activeElements && activeElements.length > 0) {
+              const index = activeElements[0].index;
+              const selectedStatus = labels[index];
+              if (selectedStatus && selectedStatus !== 'Chưa có đơn') {
+                const dateRange = getActiveDateRangeFromQueryParams();
+                let start = dateRange ? dateRange.startDate : null;
+                let end = dateRange ? dateRange.endDate : null;
+                showView('orders-view');
+                const filterSelect = document.getElementById('order-status-filter');
+                if (filterSelect) {
+                  filterSelect.value = selectedStatus;
+                }
+                loadOrders(start, end);
+              }
+            }
+          },
           plugins: {
             legend: { position: 'bottom' }
           }
@@ -4531,32 +4594,6 @@
       });
     }
     window.filterHistoryLogs = filterHistoryLogs;
-
-    // Interactive KPI Cards Navigation Function
-    function navigateToKpiDetail(type) {
-      if (type === 'revenue' || type === 'completed') {
-        showView('orders-view');
-        setTimeout(() => {
-          const filterSelect = document.getElementById('order-status-filter');
-          if (filterSelect) {
-            filterSelect.value = 'Hoàn thành';
-            filterOrdersTableByStatus('Hoàn thành');
-          }
-        }, 100);
-      } else if (type === 'orders') {
-        showView('orders-view');
-        setTimeout(() => {
-          const filterSelect = document.getElementById('order-status-filter');
-          if (filterSelect) {
-            filterSelect.value = 'all';
-            filterOrdersTableByStatus('all');
-          }
-        }, 100);
-      } else if (type === 'sold') {
-        openSoldProductsModal();
-      }
-    }
-    window.navigateToKpiDetail = navigateToKpiDetail;
 
     // Load initial stats for dashboard overview cards
     setTimeout(() => { loadStats(); }, 500);
