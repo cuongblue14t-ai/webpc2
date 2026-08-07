@@ -5,21 +5,31 @@
   <title>Admin Dashboard - Nam Nguyễn PC & Workstation</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-      --dark: #1f2937;
+      --dark: #0f1623;
+      --sidebar-bg: #111827;
+      --sidebar-hover: #1f2937;
       --orange: #f97316;
-      --light: #f3f4f6;
-      --gray: #9ca3af;
-      --red: #c62828;
+      --orange-dark: #ea580c;
+      --orange-glow: rgba(249,115,22,0.18);
+      --light: #f1f5f9;
+      --surface: #ffffff;
+      --gray: #94a3b8;
+      --border: #e2e8f0;
+      --red: #ef4444;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
     }
-    
+
     html, body, *, *::before, *::after, button, input, select, textarea, option, optgroup {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Arimo', Arial, Helvetica, sans-serif !important;
+      font-family: 'Inter', 'Arimo', Arial, Helvetica, sans-serif !important;
     }
 
     body {
@@ -28,168 +38,215 @@
       height: 100vh;
       overflow: hidden;
     }
-    
-    /* Sidebar */
+
+    /* ─── Sidebar ─── */
     .sidebar {
-      width: 250px;
-      background: var(--dark);
+      width: 260px;
+      background: var(--sidebar-bg);
       color: #fff;
       display: flex;
       flex-direction: column;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+      z-index: 100;
     }
-    
+
     .sidebar-header {
-      padding: 1.5rem;
+      padding: 1.5rem 1.25rem;
       text-align: center;
-      border-bottom: 1px solid #374151;
-      font-size: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      background: linear-gradient(135deg, #1e293b, #0f1623);
+    }
+
+    .sidebar-header span {
+      display: block;
+      font-size: 1.1rem;
       font-weight: 800;
       color: var(--orange);
+      letter-spacing: 0.5px;
+      line-height: 1.3;
     }
-    
+
     .nav-menu {
       list-style: none;
-      padding: 0;
+      padding: 0.75rem 0;
       margin: 0;
       flex: 1;
+      overflow-y: auto;
     }
-    
-    .nav-menu li {
-      border-bottom: 1px solid #374151;
-    }
-    
+
+    .nav-menu li { margin: 0 0.75rem 0.2rem; }
+
     .nav-menu a {
-      display: block;
-      padding: 1rem 1.5rem;
-      color: #d1d5db;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.75rem 1rem;
+      color: #94a3b8;
       text-decoration: none;
-      transition: background 0.2s, color 0.2s;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
       cursor: pointer;
     }
-    
-    .nav-menu a:hover,
+
+    .nav-menu a:hover {
+      background: var(--sidebar-hover);
+      color: #e2e8f0;
+    }
+
     .nav-menu a.active {
-      background: #374151;
+      background: var(--orange-glow);
       color: var(--orange);
-      border-left: 4px solid var(--orange);
+      font-weight: 700;
+      box-shadow: inset 3px 0 0 var(--orange);
     }
-    
+
     .sidebar-footer {
-      padding: 1rem;
-      border-top: 1px solid #374151;
-      text-align: center;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
     }
-    
+
     .btn-logout {
       background: transparent;
-      border: 1px solid #ef4444;
+      border: 1.5px solid #ef4444;
       color: #ef4444;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
       cursor: pointer;
       width: 100%;
-      transition: 0.2s;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
     }
-    
+
     .btn-logout:hover {
       background: #ef4444;
       color: #fff;
+      box-shadow: 0 4px 12px rgba(239,68,68,0.35);
     }
 
-    /* Main Content */
+    /* ─── Main Content ─── */
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      background: var(--light);
     }
-    
+
     .topbar {
-      background: #fff;
-      padding: 1rem 2rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      background: var(--surface);
+      padding: 0.9rem 2rem;
+      box-shadow: 0 1px 0 var(--border), 0 4px 16px rgba(0,0,0,0.04);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: 1px solid var(--border);
     }
-    
+
     .topbar h2 {
       margin: 0;
-      font-size: 1.25rem;
-      color: var(--dark);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
     }
-    
+
     .content-area {
-      padding: 2rem;
+      padding: 1.75rem 2rem;
       overflow-y: auto;
       flex: 1;
     }
-    
+
+    /* ─── Card ─── */
     .card {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      background: var(--surface);
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
       padding: 1.5rem;
       margin-bottom: 1.5rem;
-    }
-    
-    .section-view {
-      display: none;
-    }
-    
-    .section-view.active {
-      display: block;
+      border: 1px solid var(--border);
+      transition: box-shadow 0.2s ease;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
+    .card:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
-    
+
+    .section-view { display: none; }
+    .section-view.active { display: block; }
+
+    /* ─── Tables ─── */
+    table { width: 100%; border-collapse: collapse; }
+
     th, td {
-      padding: 0.75rem;
+      padding: 0.8rem 0.85rem;
       text-align: left;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
+      border-bottom: 1px solid var(--border);
     }
-    
-    th {
-      background: #f9fafb;
-      font-weight: 600;
-      color: #4b5563;
-    }
-    
-    .status-badge {
-      padding: 0.25rem 0.5rem;
-      border-radius: 9999px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: inline-block;
-    }
-    
-    .status-moi { background: #dbeafe; color: #1d4ed8; }
-    .status-dang-xu-ly { background: #fef3c7; color: #d97706; }
-    .status-hoan-thanh { background: #d1fae5; color: #059669; }
-    .status-huy { background: #fee2e2; color: #dc2626; }
 
+    th {
+      background: #f8fafc;
+      font-weight: 700;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr { transition: background 0.15s ease; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* ─── Status Badges ─── */
+    .status-badge {
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-block;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .status-moi      { background: #dbeafe; color: #1d4ed8; }
+    .status-dang-xu-ly { background: #fef3c7; color: #b45309; }
+    .status-hoan-thanh { background: #dcfce7; color: #15803d; }
+    .status-huy      { background: #fee2e2; color: #b91c1c; }
+
+    /* ─── Buttons ─── */
     .btn-sm {
-      padding: 0.35rem 0.7rem;
-      border-radius: 4px;
-      font-size: 0.85rem;
+      padding: 0.38rem 0.75rem;
+      border-radius: 7px;
+      font-size: 0.8rem;
       cursor: pointer;
       border: none;
       font-weight: 600;
-      transition: opacity 0.2s;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      letter-spacing: 0.2px;
     }
-    
-    .btn-sm:hover {
-      opacity: 0.9;
+
+    .btn-sm:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-sm:active { transform: translateY(0); }
+
+    .btn-view   { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
+    .btn-edit   { background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; box-shadow: 0 2px 8px rgba(249,115,22,0.3); }
+    .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 2px 8px rgba(239,68,68,0.3); }
+
+    /* KPI Cards clickable */
+    .kpi-card-clickable {
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border-radius: 14px !important;
     }
-    
-    .btn-view { background: #3b82f6; color: #fff; }
-    .btn-edit { background: var(--orange); color: #fff; }
-    .btn-delete { background: #ef4444; color: #fff; }
+    .kpi-card-clickable:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.18) !important;
+    }
+
 
     /* Modal Styles */
     .modal {
@@ -546,21 +603,28 @@
 <body>
   
   <div class="sidebar">
-    <div class="sidebar-header">Nam Nguyễn Admin</div>
+    <div class="sidebar-header">
+      <span>⚡ NAM NGUYỄN PC</span>
+      <span style="font-size:0.72rem; font-weight:500; color:#94a3b8; letter-spacing:1px; margin-top:2px;">ADMIN DASHBOARD</span>
+    </div>
     <ul class="nav-menu">
-      <li><a class="nav-link active" data-target="dashboard-view">Tổng quan</a></li>
-      <li><a class="nav-link" data-target="users-view">Quản lý Tài khoản</a></li>
-      <li><a class="nav-link" data-target="orders-view">Đơn hàng</a></li>
-      <li><a class="nav-link" data-target="products-view">Sản phẩm</a></li>
-      <li><a class="nav-link" data-target="banners-view">Banners</a></li>
-      <li><a class="nav-link" data-target="history-view">Lịch sử chỉnh sửa</a></li>
-      <li><a class="nav-link" data-target="stats-view">Thống kê bán hàng</a></li>
+      <li><a class="nav-link active" data-target="dashboard-view">📊 Tổng quan</a></li>
+      <li><a class="nav-link" data-target="users-view">👥 Quản lý Tài khoản</a></li>
+      <li><a class="nav-link" data-target="orders-view">📦 Đơn hàng</a></li>
+      <li><a class="nav-link" data-target="products-view">🛒 Sản phẩm</a></li>
+      <li><a class="nav-link" data-target="banners-view">🖼️ Banners</a></li>
+      <li><a class="nav-link" data-target="history-view">📝 Lịch sử chỉnh sửa</a></li>
+      <li><a class="nav-link" data-target="stats-view">📈 Thống kê bán hàng</a></li>
     </ul>
     <div class="sidebar-footer">
-      <div style="margin-bottom: 1rem;" id="admin-name">Admin</div>
-      <button class="btn-logout" id="btn-logout">Đăng xuất</button>
+      <div style="margin-bottom:0.85rem; font-size:0.85rem; color:#94a3b8; display:flex; align-items:center; gap:0.5rem;">
+        <span style="background:var(--orange); color:#fff; width:32px; height:32px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem;" id="admin-avatar">A</span>
+        <span id="admin-name" style="color:#e2e8f0; font-weight:600;">Admin</span>
+      </div>
+      <button class="btn-logout" id="btn-logout">🚪 Đăng xuất</button>
     </div>
   </div>
+
 
   <div class="main-content">
     <div class="topbar">
