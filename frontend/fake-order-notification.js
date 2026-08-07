@@ -1,6 +1,6 @@
 /**
- * fake-order-notification.js – Widget Thông báo mua hàng ảo nổi ở góc dưới bên trái màn hình
- * Thiết kế chuẩn 100% theo mẫu với thẻ tối màu, tên khách + tỉnh thành, tên sản phẩm màu vàng nổi bật.
+ * fake-order-notification.js – Widget Thông báo mua hàng ảo góc dưới bên trái
+ * Tự động lấy dữ liệu từ các SẢN PHẨM THẬT trong cơ sở dữ liệu để bấm vào xem chi tiết trực tiếp.
  */
 (function () {
   const fakeCustomers = [
@@ -18,17 +18,18 @@
     { name: 'Anh Hùng', city: 'Thanh Hóa' }
   ];
 
-  const fakeProducts = [
-    { id: 1, name: 'CPU Intel Core i9-13900K Tray', image: '/uploads/products/cpu_pc.png', price: '13.500.000' },
-    { id: 2, name: 'VGA ASUS ROG Strix GeForce RTX 4090 24GB', image: '/uploads/products/gpu.png', price: '52.900.000' },
-    { id: 3, name: 'Mainboard ASUS ROG MAXIMUS Z790 HERO', image: '/uploads/products/mainboard_pc.png', price: '16.800.000' },
-    { id: 4, name: 'RAM G.Skill Trident Z5 RGB 32GB (2x16GB) DDR5', image: '/uploads/products/ram_pc.png', price: '3.950.000' },
-    { id: 5, name: 'SSD Samsung 990 Pro 1TB M.2 NVMe PCIe Gen4', image: '/uploads/products/ssd.png', price: '2.890.000' },
-    { id: 6, name: 'Màn hình Dell UltraSharp U2723QE 27 inch 4K', image: '/uploads/products/monitor.jpg', price: '12.490.000' },
-    { id: 7, name: 'Bộ Nguồn Corsair RM1000x 1000W 80 Plus Gold', image: '/uploads/products/psu.png', price: '4.650.000' },
-    { id: 8, name: 'Tản nhiệt nước AIO NZXT Kraken Elite 360 RGB', image: '/uploads/products/cpu_cooler.png', price: '7.390.000' },
-    { id: 9, name: 'Vỏ Case Lian Li O11 Dynamic EVO Black', image: '/uploads/products/pc_case.png', price: '4.200.000' },
-    { id: 10, name: 'CPU AMD Ryzen 9 7950X3D Box Chính Hãng', image: '/uploads/products/cpu_pc.png', price: '15.990.000' }
+  // Danh sách sản phẩm thực tế trong DB làm dự phòng
+  let realProductsList = [
+    { id: 51, name: 'CPU Intel Core i5-13400F', category: 'CPU PC', image: '/uploads/products/cpu_pc.png' },
+    { id: 53, name: 'Mainboard MSI PRO B760M-E DDR4', category: 'MAINBOARD PC', image: '/uploads/products/mainboard_pc.png' },
+    { id: 55, name: 'Màn Hình MSI 27" MAG 275QF 2k IPS 180Hz', category: 'MÀN HÌNH MÁY TÍNH', image: '/uploads/products/monitor.jpg' },
+    { id: 56, name: 'Cpu Intel Core i7 6700', category: 'CPU PC', image: '/uploads/products/cpu_pc.png' },
+    { id: 61, name: 'Mainboard X99 OEM ZX-DU D3 (Dual CPU)', category: 'MAINBOARD SEVER', image: '/uploads/products/mainboard_server.png' },
+    { id: 62, name: 'RAM Corsair Vengeance LPX Black 8GB DDR4', category: 'RAM PC', image: '/uploads/products/ram_pc.png' },
+    { id: 63, name: 'Ổ Cứng SSD Samsung 980 500GB M.2 PCIe Gen3', category: 'Ổ CỨNG SSD', image: '/uploads/products/ssd.png' },
+    { id: 64, name: 'Nguồn Máy Tính VSP Delta P550W ATX', category: 'NGUỒN MÁY TÍNH', image: '/uploads/products/psu.png' },
+    { id: 65, name: 'Vỏ Case XIGMATEK DUO X 3F eATX Black', category: 'VỎ MÁY TÍNH', image: '/uploads/products/pc_case.png' },
+    { id: 52, name: 'CPU Intel Core i5-4570', category: 'CPU PC', image: '/uploads/products/cpu_pc.png' }
   ];
 
   const timeAgoList = ['1 phút trước', '2 phút trước', '3 phút trước', '5 phút trước', '7 phút trước', '10 phút trước'];
@@ -36,6 +37,57 @@
   let notificationElement = null;
   let activeTimer = null;
   let cycleTimer = null;
+
+  function getCategoryFallbackImg(categoryName) {
+    const cat = (categoryName || '').toUpperCase();
+    if (cat.includes('CPU SEVER') || cat.includes('SERVER CPU')) return '/uploads/products/cpu_server.png';
+    if (cat.includes('CPU')) return '/uploads/products/cpu_pc.png';
+    if (cat.includes('MAINBOARD SEVER')) return '/uploads/products/mainboard_server.png';
+    if (cat.includes('MAINBOARD') || cat.includes('MAIN')) return '/uploads/products/mainboard_pc.png';
+    if (cat.includes('RAM SEVER')) return '/uploads/products/ram_server.png';
+    if (cat.includes('RAM')) return '/uploads/products/ram_pc.png';
+    if (cat.includes('SSD') || cat.includes('CỨNG')) return '/uploads/products/ssd.png';
+    if (cat.includes('MÀN HÌNH') || cat.includes('MONITOR')) return '/uploads/products/monitor.jpg';
+    if (cat.includes('CARD') || cat.includes('VGA') || cat.includes('GPU')) return '/uploads/products/gpu.png';
+    if (cat.includes('NGUỒN') || cat.includes('PSU')) return '/uploads/products/psu.png';
+    if (cat.includes('TẢN NHIỆT') || cat.includes('COOLER')) return '/uploads/products/cpu_cooler.png';
+    if (cat.includes('VỎ') || cat.includes('CASE')) return '/uploads/products/pc_case.png';
+    return '/uploads/products/cpu_pc.png';
+  }
+
+  // Tự động tải sản phẩm thật từ API backend
+  async function fetchRealProductsFromAPI() {
+    try {
+      const res = await fetch('/api/products');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map(p => {
+            const rawImg = p.duong_dan_anh || (p.images && p.images[0]);
+            const fallback = getCategoryFallbackImg(p.ten_danh_muc);
+            let img = fallback;
+            if (rawImg && typeof rawImg === 'string' && rawImg.trim()) {
+              let trimmed = rawImg.trim();
+              if (trimmed.startsWith('uploads/')) trimmed = '/' + trimmed;
+              img = trimmed;
+            }
+            return {
+              id: p.id,
+              name: p.ten_san_pham || 'Sản phẩm',
+              category: p.ten_danh_muc || '',
+              image: img,
+              fallback: fallback
+            };
+          });
+          if (mapped.length > 0) {
+            realProductsList = mapped;
+          }
+        }
+      }
+    } catch (e) {
+      // Dùng danh sách fallback nếu có lỗi mạng
+    }
+  }
 
   function injectCSS() {
     if (document.getElementById('fake-order-notification-style')) return;
@@ -77,9 +129,9 @@
       }
 
       .fake-order-icon-box {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
         border-radius: 50%;
         background: radial-gradient(circle at center, #2a374a, #1a2332);
         display: flex;
@@ -91,9 +143,10 @@
       }
 
       .fake-order-icon-box img {
-        width: 28px;
-        height: 28px;
-        object-fit: contain;
+        width: 32px;
+        height: 32px;
+        object-fit: cover;
+        border-radius: 4px;
       }
 
       .fake-order-content {
@@ -184,13 +237,13 @@
 
     notificationElement.innerHTML = `
       <div class="fake-order-icon-box">
-        <img id="fake-order-img" src="/uploads/products/cpu_pc.png" alt="Product">
+        <img id="fake-order-img" src="/uploads/products/cpu_pc.png" alt="Product" referrerpolicy="no-referrer">
       </div>
       <div class="fake-order-content">
         <p class="fake-order-title">
           <strong id="fake-order-customer">Anh Nam (Hà Nội)</strong> vừa đặt mua thành công!
         </p>
-        <div id="fake-order-product" class="fake-order-product-name">CPU Intel Core i9-13900K Tray</div>
+        <div id="fake-order-product" class="fake-order-product-name">CPU Intel Core i5-13400F</div>
         <div class="fake-order-footer">
           🕒 <span id="fake-order-time">3 phút trước</span> • <em>Đã xác nhận đơn hàng</em>
         </div>
@@ -209,7 +262,7 @@
       });
     }
 
-    // Event listener to navigate to product detail on click
+    // Event listener to navigate to exact real product detail page on click
     notificationElement.addEventListener('click', () => {
       const productId = notificationElement.getAttribute('data-product-id');
       if (productId) {
@@ -228,14 +281,20 @@
 
     // Pick random items
     const customer = fakeCustomers[Math.floor(Math.random() * fakeCustomers.length)];
-    const product = fakeProducts[Math.floor(Math.random() * fakeProducts.length)];
+    const product = realProductsList[Math.floor(Math.random() * realProductsList.length)];
     const timeAgo = timeAgoList[Math.floor(Math.random() * timeAgoList.length)];
 
     // Populate data
     document.getElementById('fake-order-customer').textContent = `${customer.name} (${customer.city})`;
     document.getElementById('fake-order-product').textContent = product.name;
     document.getElementById('fake-order-time').textContent = timeAgo;
-    document.getElementById('fake-order-img').src = product.image;
+
+    const imgEl = document.getElementById('fake-order-img');
+    const fallbackSrc = product.fallback || getCategoryFallbackImg(product.category);
+    imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = fallbackSrc; };
+    imgEl.src = product.image || fallbackSrc;
+
+    // Store actual product ID on element
     popup.setAttribute('data-product-id', product.id);
 
     // Show popup
@@ -255,15 +314,16 @@
     notificationElement.classList.add('hide');
   }
 
-  function startNotificationCycle() {
+  async function startNotificationCycle() {
     injectCSS();
+    await fetchRealProductsFromAPI();
 
-    // First popup appears after 3.5 seconds
+    // First popup appears after 3 seconds
     setTimeout(() => {
       showRandomNotification();
-    }, 3500);
+    }, 3000);
 
-    // Cycle popup every 12 to 18 seconds
+    // Cycle popup every 14 seconds
     cycleTimer = setInterval(() => {
       showRandomNotification();
     }, 14000);
