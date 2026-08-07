@@ -14,10 +14,13 @@ const statsRouter = require('./routes/stats');
 const { router: authRouter } = require('./routes/auth');
 const db = require('./db');
 const { autoMigrateExistingImages } = require('./utils/imageHandler');
-
+const compression = require('compression');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Enable GZIP compression for all HTTP responses
+app.use(compression());
 
 // Enable CORS for all origins, protocols and preflight requests
 app.use((req, res, next) => {
@@ -30,11 +33,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve static frontend files and uploads
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static frontend files and uploads with browser caching
+const staticOptions = { maxAge: '1d', etag: true };
+app.use(express.static(path.join(__dirname, 'public'), staticOptions));
+app.use(express.static(path.join(__dirname, '..', 'frontend'), staticOptions));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), staticOptions));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), staticOptions));
 
 // Explicit root route serving index.html
 app.get('/', (req, res) => {
@@ -165,8 +169,8 @@ async function initDb() {
       console.warn('Order history sync notice:', e.message);
     }
 
-    // Auto-migrate any remaining external images in DB to local /uploads/ storage
-    await autoMigrateExistingImages(db);
+    // Background non-blocking migration of external images
+    autoMigrateExistingImages(db).catch(() => {});
 
   } catch (err) {
     console.error('⚠️ MySQL connection/migration notice:', err.message);

@@ -13,28 +13,30 @@ function formatLocalDate(d) {
   return `${year}-${month}-${day}`;
 }
 
-// Helper to extract date filters
 function getDateRange(req) {
   let start = req.query.startDate;
   let end = req.query.endDate;
   
-  if (!start) {
+  if (!start && !end) {
     const d = new Date();
     d.setDate(d.getDate() - 29);
     start = formatLocalDate(d) + ' 00:00:00';
-  } else {
-    if (!start.includes(' ')) {
-      start = start + ' 00:00:00';
-    }
-  }
-  
-  if (!end) {
     end = formatLocalDate(new Date()) + ' 23:59:59';
-  } else {
-    if (!end.includes(' ')) {
-      end = end + ' 23:59:59';
-    }
+    return [start, end];
   }
+
+  if (start && !end) {
+    end = formatLocalDate(new Date()) + ' 23:59:59';
+  }
+
+  if (!start && end) {
+    const d = new Date(end);
+    d.setDate(d.getDate() - 29);
+    start = formatLocalDate(d) + ' 00:00:00';
+  }
+
+  if (!start.includes(' ')) start = start + ' 00:00:00';
+  if (!end.includes(' ')) end = end + ' 23:59:59';
   
   return [start, end];
 }

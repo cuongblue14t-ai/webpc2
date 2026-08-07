@@ -50,8 +50,8 @@ async function mirrorExternalImage(url, subfolder = 'products') {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    const filename = `img_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
-    const destPath = path.join(uploadDir, filename);
+    const tempFilename = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
+    const tempDestPath = path.join(uploadDir, tempFilename);
 
     // Download file helper supporting redirects (for Google Drive thumbnails)
     const download = (targetUrl, redirects = 0) => {
@@ -75,13 +75,13 @@ async function mirrorExternalImage(url, subfolder = 'products') {
           if (res.statusCode !== 200) {
             return reject(new Error(`HTTP status ${res.statusCode}`));
           }
-          const fileStream = fs.createWriteStream(destPath);
+          const fileStream = fs.createWriteStream(tempDestPath);
           res.pipe(fileStream);
           fileStream.on('finish', () => {
-            fileStream.close(() => resolve(`/uploads/${subfolder}/${filename}`));
+            fileStream.close(() => resolve(tempDestPath));
           });
           fileStream.on('error', (err) => {
-            fs.unlink(destPath, () => {});
+            fs.unlink(tempDestPath, () => {});
             reject(err);
           });
         });
@@ -93,14 +93,43 @@ async function mirrorExternalImage(url, subfolder = 'products') {
       });
     };
 
-    const localPath = await download(normalizedUrl);
-    // Check file size, if empty or invalid, cleanup & fallback
-    const stats = fs.statSync(destPath);
+    await download(normalizedUrl);
+    
+    // Check file size
+    const stats = fs.statSync(tempDestPath);
     if (stats.size < 100) {
-      fs.unlinkSync(destPath);
+      fs.unlinkSync(tempDestPath);
       return normalizedUrl;
     }
-    return localPath;
+
+    // Compute SHA-256 hash of downloaded temp file
+    const crypto = require('crypto');
+    const getHash = (filePath) => {
+      const buffer = fs.readFileSync(filePath);
+      return crypto.createHash('sha256').update(buffer).digest('hex');
+    };
+
+    const newHash = getHash(tempDestPath);
+
+    // Check if an existing file in uploadDir has the same hash
+    const existingFiles = fs.readdirSync(uploadDir).filter(f => !fs.statSync(path.join(uploadDir, f)).isDirectory() && f !== tempFilename);
+    for (const file of existingFiles) {
+      const existingPath = path.join(uploadDir, file);
+      try {
+        if (getHash(existingPath) === newHash) {
+          // File already exists! Delete temp and return existing relative path
+          fs.unlinkSync(tempDestPath);
+          return `/uploads/${subfolder}/${file}`;
+        }
+      } catch (e) {}
+    }
+
+    // No match found, rename temp file to permanent file name
+    const finalFilename = `img_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
+    const finalPath = path.join(uploadDir, finalFilename);
+    fs.renameSync(tempDestPath, finalPath);
+
+    return `/uploads/${subfolder}/${finalFilename}`;
   } catch (err) {
     console.warn(`Failed to mirror image ${url}: ${err.message}. Using normalized URL fallback.`);
     return normalizedUrl;

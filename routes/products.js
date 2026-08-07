@@ -371,6 +371,10 @@ router.post(
       return res.status(400).json({ error: 'Vui lòng cung cấp ít nhất một đường dẫn ảnh sản phẩm.' });
     }
 
+    if (formattedUrls.length > 10) {
+      return res.status(400).json({ error: 'Mỗi sản phẩm chỉ được tải lên tối đa 10 hình ảnh.' });
+    }
+
     const connection = await db.getConnection();
     try {
       await connection.beginTransaction();
@@ -500,6 +504,10 @@ router.put(
 
     if (formattedUrls.length === 0) {
       return res.status(400).json({ error: 'Vui lòng cung cấp ít nhất một đường dẫn ảnh sản phẩm.' });
+    }
+
+    if (formattedUrls.length > 10) {
+      return res.status(400).json({ error: 'Mỗi sản phẩm chỉ được tải lên tối đa 10 hình ảnh.' });
     }
 
     const connection = await db.getConnection();
