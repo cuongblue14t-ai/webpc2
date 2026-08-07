@@ -209,8 +209,12 @@
     // Read URL param on load
     const urlParams = new URLSearchParams(window.location.search);
     const campaignParam = urlParams.get('campaign');
-    if (campaignParam === 'build-pc') {
+    if (campaignParam === 'build-pc' || window.location.hash.includes('campaign-sec-build-pc')) {
       switchCampaignTab('build-pc');
+      setTimeout(() => {
+        const targetSec = document.getElementById('campaign-sec-build-pc');
+        if (targetSec) targetSec.scrollIntoView({ behavior: 'smooth' });
+      }, 200);
     } else if (campaignParam === 'quoc-khanh-2-9' || campaignParam === '2-9' || campaignParam === '29' || window.location.hash.includes('campaign-sec-29')) {
       switchCampaignTab('quoc-khanh-2-9');
       setTimeout(() => {
