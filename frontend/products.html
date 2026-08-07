@@ -54,6 +54,13 @@
         </select>
       </div>
       <div>
+        <label for="promo-filter" style="font-weight: 600;">Khuyến mãi</label><br/>
+        <select id="promo-filter" style="padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px;">
+          <option value="all">Tất cả sản phẩm</option>
+          <option value="on-sale">🔥 Đang khuyến mãi</option>
+        </select>
+      </div>
+      <div>
         <label for="filter-price-min" style="font-weight: 600;">Giá từ</label><br/>
         <input type="number" id="filter-price-min" min="0" placeholder="0" style="padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px;" />
       </div>
@@ -132,6 +139,12 @@
           }
         }
         
+        const promoParam = urlParams.get('promo') || urlParams.get('sale') || urlParams.get('khuyenmai');
+        if (promoParam === 'true' || promoParam === 'on-sale' || promoParam === '1') {
+          const promoSelect = document.getElementById('promo-filter');
+          if (promoSelect) promoSelect.value = 'on-sale';
+        }
+        
         applyFilterSort();
       } catch (e) {
         console.error('Failed to fetch products', e);
@@ -141,10 +154,13 @@
     function applyFilterSort() {
       const name = document.getElementById('filter-name') ? document.getElementById('filter-name').value.trim().toLowerCase() : '';
       const catSelect = document.getElementById('category-filter');
+      const promoSelect = document.getElementById('promo-filter');
       const sortSelect = document.getElementById('sort-select');
       
       if (catSelect) currentFilter = catSelect.value;
       if (sortSelect) currentSort = sortSelect.value;
+
+      const promoVal = promoSelect ? promoSelect.value : 'all';
 
       const priceMin = document.getElementById('filter-price-min') && document.getElementById('filter-price-min').value !== '' ? parseFloat(document.getElementById('filter-price-min').value) : NaN;
       const priceMax = document.getElementById('filter-price-max') && document.getElementById('filter-price-max').value !== '' ? parseFloat(document.getElementById('filter-price-max').value) : NaN;
@@ -154,6 +170,15 @@
       // Filter by category
       if (currentFilter && currentFilter !== 'All') {
         filtered = filtered.filter(p => (p.ten_danh_muc || '').trim() === currentFilter.trim());
+      }
+
+      // Filter by promotion status
+      if (promoVal === 'on-sale') {
+        filtered = filtered.filter(p => {
+          const basePrice = Number(p.gia) || 0;
+          const salePrice = p.gia_khuyen_mai ? Number(p.gia_khuyen_mai) : 0;
+          return salePrice > 0 && salePrice < basePrice;
+        });
       }
       
       // Advanced filters
